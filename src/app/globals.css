@@ -1099,3 +1099,24 @@ dialog p {
     grid-template-columns: 1fr;
   }
 }
+
+.chair-editor-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  align-items: end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.chair-editor-row .field {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .chair-editor-row {
+    grid-template-columns: 1fr;
+    border-bottom: 1px solid var(--border, #ddd);
+    padding-bottom: 16px;
+  }
+  .chair-editor-row button {
+    justify-self: end;
+  }
+}

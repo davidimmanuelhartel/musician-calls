@@ -5,6 +5,7 @@ import { ArrowRight, FileText, X } from 'lucide-react';
 import { dictionary, instruments, type Locale, type Dictionary } from '@/lib/i18n';
 import { MAX_FILE_SIZE, callSchema, eventTimes } from '@/lib/domain';
 import { type Ensemble, ensembleDefaults } from '@/lib/ensembles';
+import { readSeating, chairLabel } from '@/lib/seating';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { publishCall } from '@/app/actions';
@@ -18,6 +19,8 @@ export function CreateCallForm({
   ensemble: Ensemble;
 }) {
   const t = dictionary(locale);
+  const chairs = readSeating(ensemble.seating);
+  const [customChair, setCustomChair] = useState(false);
   const router = useRouter();
   const scope = `call:${user.id}:${ensemble.id}`;
   const serializedDefaults = JSON.stringify({
@@ -205,23 +208,78 @@ export function CreateCallForm({
         <section className="form-panel">
           <h2>{t.basics}</h2>
           <div className="form-grid">
-            <label className="field">
-              {t.instrument} *
-              <select
-                name="instrument"
-                value={values.instrument}
-                onChange={(e) => change('instrument', e.target.value)}
-                required
-              >
-                <option value="">{t.chooseInstrument}</option>
-                {Object.entries(instruments).map(([id, names]) => (
-                  <option key={id} value={id}>
-                    {names[locale === 'da' ? 1 : 0]}
+            {chairs.length > 0 && (
+              <label className="field full">
+                {t.savedChair} *
+                <select
+                  value={
+                    customChair
+                      ? 'custom'
+                      : String(
+                          chairs.findIndex(
+                            (c) =>
+                              c.instrument === values.instrument &&
+                              (c.en === values.position || c.da === values.position),
+                          ),
+                        )
+                  }
+                  onChange={(e) => {
+                    if (e.target.value === 'custom') {
+                      setCustomChair(true);
+                      return;
+                    }
+                    const chair = chairs[Number(e.target.value)];
+                    if (chair) {
+                      setCustomChair(false);
+                      setSaved(false);
+                      setValues((v) => ({
+                        ...v,
+                        instrument: chair.instrument,
+                        position: chairLabel(chair, locale),
+                      }));
+                    }
+                  }}
+                >
+                  <option value="-1" disabled>
+                    {t.chooseChair}
                   </option>
-                ))}
-              </select>
-            </label>
-            {field('position', t.position, 'text', false, 100)}
+                  {chairs.map((chair, index) => (
+                    <option key={index} value={index}>
+                      {chairLabel(chair, locale)}
+                    </option>
+                  ))}
+                  <option value="custom">{t.customChair}</option>
+                </select>
+              </label>
+            )}
+            {(chairs.length === 0 ||
+              customChair ||
+              (!!values.instrument &&
+                !chairs.some(
+                  (c) =>
+                    c.instrument === values.instrument &&
+                    (c.en === values.position || c.da === values.position),
+                ))) && (
+              <>
+                <label className="field">
+                  {t.instrument} *
+                  <select
+                    name="instrument"
+                    value={values.instrument}
+                    onChange={(e) => change('instrument', e.target.value)}
+                    required
+                  >
+                    <option value="">{t.chooseInstrument}</option>
+                    {Object.entries(instruments).map(([id, names]) => (
+                      <option key={id} value={id}>
+                        {names[locale === 'da' ? 1 : 0]}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {field('position', t.position, 'text', false, 100)}
+              </>
+            )}
             {field('date', t.date, 'date', true)}
             {field('call_time', t.callTime, 'time', true)}
             {field('performance_time', t.performance, 'time')}

@@ -87,3 +87,7 @@ The test suite checks ensemble creation and joining, private membership, owner p
 ## Product decisions and next steps
 
 See [v0 implementation notes](docs/V0_PLAN.md) and [deployment notes](docs/DEPLOYMENT.md). The repository is local until a GitHub remote is created. Hosted Supabase, email delivery and production hosting still require configuration.
+
+### Ensemble instrumentation
+
+Ensemble owners can select editable templates for symphony, chamber, string and wind orchestras, brass bands and big bands, or start with a custom list. Each chair/section stores an instrument and English/Danish labels. Members choose saved chairs when creating calls, with a custom-instrument fallback. Existing ensembles start with an empty custom list; owners configure them through Edit ensemble. Published calls keep their original instrument and chair when the ensemble changes. A visual seating map is deferred.

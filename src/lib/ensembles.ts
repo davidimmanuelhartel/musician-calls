@@ -1,9 +1,12 @@
 import { z } from 'zod';
+import { ensembleTypes, seatingSchema } from './seating';
 import type { Database } from './database.types';
 export type Ensemble = Database['public']['Tables']['ensembles']['Row'];
 export const ensembleSchema = z
   .object({
     id: z.uuid(),
+    ensemble_type: z.enum(Object.keys(ensembleTypes) as [string, ...string[]]).default('custom'),
+    seating: seatingSchema.default([]),
     name: z.string().trim().min(1).max(150),
     venue: z.string().trim().min(1).max(200),
     address: z.string().trim().max(300).default(''),

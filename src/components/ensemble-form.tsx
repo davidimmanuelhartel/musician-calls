@@ -3,6 +3,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { dictionary, type Dictionary, type Locale } from '@/lib/i18n';
 import { type Ensemble, ensembleSchema } from '@/lib/ensembles';
+import { SeatingEditor } from '@/components/seating-editor';
+import { readSeating, type EnsembleType } from '@/lib/seating';
 import { saveEnsemble } from '@/app/ensemble-actions';
 export function EnsembleForm({
   locale,
@@ -14,6 +16,10 @@ export function EnsembleForm({
   profile: { name: string; phone: string };
 }) {
   const t = dictionary(locale);
+  const [ensembleType, setEnsembleType] = useState<EnsembleType>(
+    (ensemble?.ensemble_type as EnsembleType) || 'custom',
+  );
+  const [chairs, setChairs] = useState(() => readSeating(ensemble?.seating));
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -58,7 +64,7 @@ export function EnsembleForm({
         setError('');
         const identifier = id || crypto.randomUUID();
         setId(identifier);
-        const input = { ...values, id: identifier };
+        const input = { ...values, id: identifier, ensemble_type: ensembleType, seating: chairs };
         if (!ensembleSchema.safeParse(input).success) {
           setError('required');
           setBusy(false);
@@ -122,6 +128,15 @@ export function EnsembleForm({
             />
           </label>
         </section>
+        <SeatingEditor
+          locale={locale}
+          type={ensembleType}
+          chairs={chairs}
+          onChange={(type, seating) => {
+            setEnsembleType(type);
+            setChairs(seating);
+          }}
+        />
         {!ensemble && (
           <section className="form-panel">
             <h2>{t.contact}</h2>

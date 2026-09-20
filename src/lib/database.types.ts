@@ -238,9 +238,11 @@ export type Database = {
           created_at: string
           currency: string | null
           description: string
+          ensemble_type: string
           id: string
           name: string
           owner_id: string
+          seating: Json
           venue: string
         }
         Insert: {
@@ -250,9 +252,11 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string
+          ensemble_type?: string
           id?: string
           name: string
           owner_id: string
+          seating?: Json
           venue: string
         }
         Update: {
@@ -262,9 +266,11 @@ export type Database = {
           created_at?: string
           currency?: string | null
           description?: string
+          ensemble_type?: string
           id?: string
           name?: string
           owner_id?: string
+          seating?: Json
           venue?: string
         }
         Relationships: []
@@ -385,6 +391,7 @@ export type Database = {
         Args: { ip_hash: string; payload: Json }
         Returns: undefined
       }
+      valid_ensemble_seating: { Args: { value: Json }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

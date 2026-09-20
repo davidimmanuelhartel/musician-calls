@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { readSeating, chairLabel, ensembleTypes, type EnsembleType } from '@/lib/seating';
 import { notFound, redirect } from 'next/navigation';
 import { Plus, ArrowUpRight, ArrowLeft, LockKeyhole } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
@@ -106,6 +107,24 @@ export default async function EnsemblePage({
           </section>
         </div>
         <aside>
+          <section className="form-panel">
+            <h2>{t.seating}</h2>
+            <p>{ensembleTypes[ensemble.ensemble_type as EnsembleType][locale === 'da' ? 1 : 0]}</p>
+            {readSeating(ensemble.seating).length ? (
+              <details>
+                <summary>
+                  {t.seating} ({readSeating(ensemble.seating).length})
+                </summary>
+                <ul>
+                  {readSeating(ensemble.seating).map((chair, index) => (
+                    <li key={index}>{chairLabel(chair, locale)}</li>
+                  ))}
+                </ul>
+              </details>
+            ) : (
+              <p className="hint">{t.noSeating}</p>
+            )}
+          </section>
           <section className="form-panel">
             <h2>{t.sharedDefaults}</h2>
             <div className="saved-defaults">

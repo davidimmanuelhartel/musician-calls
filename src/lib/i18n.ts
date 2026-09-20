@@ -4,6 +4,21 @@ export function isLocale(value: string): value is Locale {
   return value === 'en' || value === 'da';
 }
 export const en = {
+  ensembleType: 'Ensemble type',
+  seating: 'Instruments and chairs',
+  seatingHint:
+    'Choose a starting template, then adjust it to your ensemble. Rows can represent a chair or a whole section.',
+  applyTemplate: 'Replace with type template',
+  replaceSeating: 'Replace your current instruments and chairs with this template?',
+  addChair: 'Add chair / section',
+  removeChair: 'Remove chair',
+  chairEnglish: 'Chair name (English)',
+  chairDanish: 'Chair name (Danish)',
+  chooseChair: 'Choose a chair / section',
+  customChair: 'Other instrument / chair',
+  savedChair: 'Ensemble chair',
+  noSeating: 'No instruments or chairs saved yet.',
+
   myEnsembles: 'My ensembles',
   newEnsemble: 'Create an ensemble',
   ensembleIntro:
@@ -198,6 +213,21 @@ export const en = {
 };
 export type Dictionary = { [K in keyof typeof en]: string };
 export const da: Dictionary = {
+  ensembleType: 'Ensembletype',
+  seating: 'Instrumenter og stemmer',
+  seatingHint:
+    'Vælg en skabelon, og tilpas den til ensemblet. En række kan være en stemme eller en hel gruppe.',
+  applyTemplate: 'Erstat med skabelon for typen',
+  replaceSeating: 'Vil du erstatte de nuværende instrumenter og stemmer med denne skabelon?',
+  addChair: 'Tilføj stemme / gruppe',
+  removeChair: 'Fjern stemme',
+  chairEnglish: 'Stemmens navn (engelsk)',
+  chairDanish: 'Stemmens navn (dansk)',
+  chooseChair: 'Vælg en stemme / gruppe',
+  customChair: 'Andet instrument / anden stemme',
+  savedChair: 'Stemme i ensemblet',
+  noSeating: 'Ingen instrumenter eller stemmer gemt endnu.',
+
   myEnsembles: 'Mine ensembler',
   newEnsemble: 'Opret et ensemble',
   ensembleIntro:
@@ -397,6 +427,16 @@ export function dictionary(locale: Locale): Dictionary {
   return locale === 'da' ? da : en;
 }
 export const instruments = {
+  saxophone: ['Saxophone', 'Saxofon'],
+  harp: ['Harp', 'Harpe'],
+  euphonium: ['Euphonium', 'Euphonium'],
+  cornet: ['Cornet', 'Kornet'],
+  flugelhorn: ['Flugelhorn', 'Flygelhorn'],
+  tenor_horn: ['Tenor horn', 'Althorn'],
+  baritone_horn: ['Baritone horn', 'Barytonhorn'],
+  guitar: ['Guitar', 'Guitar'],
+  bass_guitar: ['Bass guitar', 'Elbas'],
+
   violin: ['Violin', 'Violin'],
   viola: ['Viola', 'Bratsch'],
   cello: ['Cello', 'Cello'],

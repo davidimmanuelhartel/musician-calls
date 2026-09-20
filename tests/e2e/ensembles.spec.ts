@@ -263,3 +263,56 @@ test('members join the existing private page and create simpler calls; drafts st
   expect(await mp.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await context.close();
 });
+
+test('seating templates can be customized and reused for bilingual calls', async ({ page }) => {
+  const owner = await account();
+  await signIn(page, owner.email, '/en/ensembles/new');
+  await page.getByLabel('Ensemble name').fill(`Seating ${crypto.randomUUID()}`);
+  await page.getByLabel('Venue / location').fill('Seating test hall');
+  await page.getByLabel('Your name').fill('Seating owner');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('combobox', { name: 'Ensemble type', exact: true }).selectOption('big_band');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByLabel('Chair name (English)', { exact: true })).toHaveCount(17);
+  await page.getByLabel('Chair name (English)', { exact: true }).first().fill('Lead alto');
+  await page.getByLabel('Chair name (Danish)', { exact: true }).first().fill('Første altsaxofon');
+  await page.getByRole('button', { name: 'Remove chair 17', exact: true }).click();
+  await page.getByRole('button', { name: 'Create an ensemble', exact: true }).click();
+  await expect(page).toHaveURL(/\/en\/ensembles\/[a-f0-9-]+$/);
+  const id = new URL(page.url()).pathname.split('/').pop()!;
+  const ensemble = (await owner.db.from('ensembles').select('*').eq('id', id).single()).data!;
+  expect(ensemble.ensemble_type).toBe('big_band');
+  expect(ensemble.seating).toHaveLength(16);
+  const invalid = await owner.db.rpc('save_ensemble', {
+    ensemble: id,
+    payload: { ...ensemble, seating: [{ instrument: 'invented', en: 'Bad', da: 'Bad' }] },
+  });
+  expect(invalid.error).not.toBeNull();
+  await page.goto(`/da/calls/new?ensemble=${id}`);
+  await page.getByRole('combobox', { name: 'Stemme i ensemblet *', exact: true }).selectOption('0');
+  await page.getByRole('link', { name: 'EN', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Ensemble chair *', exact: true })).toHaveValue(
+    '0',
+  );
+  await expect(page.getByRole('combobox', { name: 'Instrument *', exact: true })).toHaveCount(0);
+  await page
+    .getByLabel('Date', { exact: false })
+    .fill(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
+  await page.getByLabel('Call time').fill('18:00');
+  await page.getByRole('button', { name: 'Publish call', exact: true }).click();
+  await expect(page.getByText('Call published', { exact: false }).first()).toBeVisible();
+  const callId = new URL(page.url()).pathname.split('/').pop()!;
+  const call = (await anon.from('calls').select('*').eq('id', callId).single()).data!;
+  expect(call.instrument).toBe('saxophone');
+  expect(call.position).toBe('Første altsaxofon');
+  await page.goto(`/en/ensembles/${id}/edit`);
+  await expect(page.getByLabel('Chair name (English)', { exact: true }).first()).toHaveValue(
+    'Lead alto',
+  );
+  await page.getByLabel('Chair name (English)', { exact: true }).first().fill('New chair name');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/en/ensembles/${id}$`));
+  expect(
+    (await anon.from('calls').select('position').eq('id', callId).single()).data!.position,
+  ).toBe('Første altsaxofon');
+});
