@@ -90,11 +90,15 @@ export function ResponseForm({
               <input name="email" type="email" autoComplete="email" required maxLength={254} />
             </label>
             <label className="field">
-              {t.phone} <small>{t.optional}</small>
+              <span className="field-label">
+                {t.phone} <small>{t.optional}</small>
+              </span>
               <input name="phone" type="tel" autoComplete="tel" maxLength={40} />
             </label>
             <label className="field">
-              {t.message} <small>{t.optional}</small>
+              <span className="field-label">
+                {t.message} <small>{t.optional}</small>
+              </span>
               <textarea name="message" maxLength={2000} />
             </label>
             <div className="honeypot" aria-hidden="true">

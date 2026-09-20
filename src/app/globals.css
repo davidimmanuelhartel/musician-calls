@@ -507,6 +507,12 @@ p {
 .field.full {
   grid-column: 1/-1;
 }
+.field-label {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 .field small {
   font-weight: 400;
   color: var(--muted);

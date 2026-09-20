@@ -86,8 +86,10 @@ export function CreateCallForm({
   function field(name: string, label: string, type = 'text', required = false, maxLength = 200) {
     return (
       <label className="field">
-        {label}
-        {required ? ' *' : <small>{t.optional}</small>}
+        <span className="field-label">
+          {label}
+          {required ? ' *' : <small>{t.optional}</small>}
+        </span>
         <input
           name={name}
           type={type}
@@ -284,8 +286,9 @@ export function CreateCallForm({
             {field('call_time', t.callTime, 'time', true)}
             {field('performance_time', t.performance, 'time')}
             <label className="field full">
-              {t.repertoire}
-              <small>{t.optional}</small>
+              <span className="field-label">
+                {t.repertoire} <small>{t.optional}</small>
+              </span>
               <textarea
                 name="repertoire"
                 value={values.repertoire}
@@ -345,8 +348,9 @@ export function CreateCallForm({
               )}
             </div>
             <label className="field" style={{ marginTop: 20 }}>
-              {t.information}
-              <small>{t.optional}</small>
+              <span className="field-label">
+                {t.information} <small>{t.optional}</small>
+              </span>
               <textarea
                 name="description"
                 value={values.description}

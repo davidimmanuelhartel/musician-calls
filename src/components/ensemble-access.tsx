@@ -103,8 +103,9 @@ export function JoinEnsemble({
           />
         </label>
         <label className="field" style={{ marginTop: 18 }}>
-          {t.phone}
-          <small>{t.optional}</small>
+          <span className="field-label">
+            {t.phone} <small>{t.optional}</small>
+          </span>
           <input
             name="phone"
             type="tel"

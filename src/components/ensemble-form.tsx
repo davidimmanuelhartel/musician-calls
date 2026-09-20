@@ -41,8 +41,10 @@ export function EnsembleForm({
   function field(key: string, label: string, required = false, maxLength = 200, type = 'text') {
     return (
       <label className="field">
-        {label}
-        {required ? ' *' : <small>{t.optional}</small>}
+        <span className="field-label">
+          {label}
+          {required ? ' *' : <small>{t.optional}</small>}
+        </span>
         <input
           name={key}
           value={values[key]}
@@ -118,8 +120,9 @@ export function EnsembleForm({
             )}
           </div>
           <label className="field" style={{ marginTop: 22 }}>
-            {t.information}
-            <small>{t.optional}</small>
+            <span className="field-label">
+              {t.information} <small>{t.optional}</small>
+            </span>
             <textarea
               name="description"
               value={values.description}

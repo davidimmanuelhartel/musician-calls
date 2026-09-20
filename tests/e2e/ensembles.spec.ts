@@ -325,6 +325,18 @@ test('browser review: all seating templates in English and Danish on desktop and
   page.on('dialog', (dialog) => dialog.accept());
   for (const locale of ['en', 'da']) {
     await page.goto(`/${locale}/ensembles/new`);
+    for (const width of [1280, 390]) {
+      await page.setViewportSize({ width, height: 900 });
+      const contact = page.locator('.form-panel').last();
+      await contact.scrollIntoViewIfNeeded();
+      if (width === 1280) {
+        const name = await contact.locator('input[name="organizer_name"]').boundingBox();
+        const phone = await contact.locator('input[name="organizer_phone"]').boundingBox();
+        expect(Math.abs(name!.y - phone!.y)).toBeLessThan(1);
+      }
+      await page.screenshot({ path: `test-results/contact-${locale}-${width}.png` });
+    }
+
     for (const type of ['symphony', 'chamber', 'strings', 'wind', 'brass', 'big_band', 'custom']) {
       await page
         .getByRole('combobox', {
