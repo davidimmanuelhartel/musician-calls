@@ -1126,3 +1126,61 @@ dialog p {
     justify-self: end;
   }
 }
+
+.venue-field {
+  position: relative;
+  margin-top: 22px;
+}
+.venue-field > input {
+  margin-top: 7px;
+}
+.venue-results {
+  position: absolute;
+  z-index: 10;
+  top: 72px;
+  left: 0;
+  right: 0;
+  list-style: none;
+  margin: 0;
+  padding: 4px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px #0002;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.venue-results li {
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 4px;
+}
+.venue-results li:hover,
+.venue-results li[aria-selected='true'] {
+  background: #edf0e2;
+}
+.venue-results strong,
+.venue-results span {
+  display: block;
+  font-size: 13px;
+}
+.venue-results span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.venue-address {
+  font-size: 13px;
+  margin: 12px 0;
+}
+.venue-manual {
+  margin-top: 12px;
+  font-size: 12px;
+}
+.venue-manual .field {
+  margin-top: 12px;
+}
+.venue-credit {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}

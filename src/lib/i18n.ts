@@ -4,6 +4,14 @@ export function isLocale(value: string): value is Locale {
   return value === 'en' || value === 'da';
 }
 export const en = {
+  callDetails: 'Details for this call',
+  venueSearch: 'Search for a venue or street address',
+  venueHint: 'Choose a result to fill the address automatically.',
+  venueManual: 'Enter or correct address manually',
+  venueUnavailable: 'Search is unavailable. You can enter the venue and address manually.',
+  venueNoResults: 'No results. Try including the city, or enter the address manually.',
+  venueSearching: 'Searching…',
+
   ensembleType: 'Ensemble type',
   seating: 'Instruments and chairs',
   seatingHint:
@@ -27,7 +35,7 @@ export const en = {
   editEnsemble: 'Edit ensemble',
   saveEnsemble: 'Save ensemble',
   profileIntro:
-    'Add your usual venue, fee and practical information. Every member can reuse them when publishing a call.',
+    'Add your ensemble name, usual venue and instruments. Members can reuse them when publishing a call.',
   noEnsembles: 'Your ensemble starts here.',
   noEnsemblesText:
     'Create your ensemble once, or ask a member for an invite link to an existing ensemble.',
@@ -212,6 +220,14 @@ export const en = {
 };
 export type Dictionary = { [K in keyof typeof en]: string };
 export const da: Dictionary = {
+  callDetails: 'Oplysninger om dette opslag',
+  venueSearch: 'Søg efter spillested eller adresse',
+  venueHint: 'Vælg et resultat for automatisk at udfylde adressen.',
+  venueManual: 'Indtast eller ret adressen manuelt',
+  venueUnavailable: 'Søgning er ikke tilgængelig. Du kan indtaste spillested og adresse manuelt.',
+  venueNoResults: 'Ingen resultater. Prøv at tilføje byen, eller indtast adressen manuelt.',
+  venueSearching: 'Søger…',
+
   ensembleType: 'Ensembletype',
   seating: 'Instrumenter og stemmer',
   seatingHint:
@@ -235,7 +251,7 @@ export const da: Dictionary = {
   editEnsemble: 'Rediger ensemble',
   saveEnsemble: 'Gem ensemble',
   profileIntro:
-    'Tilføj jeres sædvanlige spillested, honorar og praktiske oplysninger. Alle medlemmer kan genbruge dem i nye opslag.',
+    'Tilføj ensemblets navn, sædvanlige spillested og instrumenter. Medlemmer kan genbruge dem i nye opslag.',
   noEnsembles: 'Dit ensemble starter her.',
   noEnsemblesText:
     'Opret dit ensemble én gang, eller bed et medlem om et invitationslink til et eksisterende ensemble.',

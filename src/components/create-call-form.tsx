@@ -6,6 +6,7 @@ import { dictionary, instruments, type Locale, type Dictionary } from '@/lib/i18
 import { MAX_FILE_SIZE, callSchema, eventTimes } from '@/lib/domain';
 import { type Ensemble, ensembleDefaults } from '@/lib/ensembles';
 import { readSeating, chairLabel } from '@/lib/seating';
+import { VenueField } from '@/components/venue-field';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { supabaseBrowser } from '@/lib/supabase/client';
 import { publishCall } from '@/app/actions';
@@ -305,60 +306,64 @@ export function CreateCallForm({
             <strong>{ensemble.name}</strong>
             <span>{values.venue}</span>
             {values.address && <span>{values.address}</span>}
-            <span>
-              {values.compensation_type === 'paid'
-                ? `${values.compensation_amount} ${values.currency}`
-                : t[values.compensation_type as 'unpaid' | 'negotiable']}
-            </span>
-            {values.description && <p className="prose">{values.description}</p>}
           </div>
           <p className="hint">{t.savedDetails}</p>
           <details className="call-overrides">
             <summary>{t.changeCallDetails}</summary>
             <p className="hint">{t.callOnlyChanges}</p>
-            <div className="form-grid" style={{ marginTop: 16 }}>
-              {field('venue', t.venue, 'text', true)}
-              {field('address', t.address, 'text', false, 300)}
-              <label className="field">
-                {t.compensation}
-                <select
-                  value={values.compensation_type}
-                  onChange={(e) => change('compensation_type', e.target.value)}
-                >
-                  <option value="negotiable">{t.negotiable}</option>
-                  <option value="unpaid">{t.unpaid}</option>
-                  <option value="paid">{t.paid}</option>
-                </select>
-              </label>
-              {values.compensation_type === 'paid' && (
-                <>
-                  {field('compensation_amount', t.amount, 'number', true, 12)}
-                  <label className="field">
-                    {t.currency}
-                    <select
-                      value={values.currency}
-                      onChange={(e) => change('currency', e.target.value)}
-                    >
-                      {['DKK', 'EUR', 'SEK', 'NOK', 'GBP'].map((c) => (
-                        <option key={c}>{c}</option>
-                      ))}
-                    </select>
-                  </label>
-                </>
-              )}
-            </div>
-            <label className="field" style={{ marginTop: 20 }}>
-              <span className="field-label">
-                {t.information} <small>{t.optional}</small>
-              </span>
-              <textarea
-                name="description"
-                value={values.description}
-                onChange={(e) => change('description', e.target.value)}
-                maxLength={5000}
-              />
-            </label>
+            <VenueField
+              locale={locale}
+              venue={values.venue}
+              address={values.address}
+              onChange={(venue, address) => {
+                setSaved(false);
+                setValues((v) => ({ ...v, venue, address }));
+              }}
+            />
           </details>
+        </section>
+        <section className="form-panel">
+          <h2>{t.callDetails}</h2>
+          <div className="form-grid">
+            <label className="field">
+              {t.compensation}
+              <select
+                value={values.compensation_type}
+                onChange={(e) => change('compensation_type', e.target.value)}
+              >
+                <option value="negotiable">{t.negotiable}</option>
+                <option value="unpaid">{t.unpaid}</option>
+                <option value="paid">{t.paid}</option>
+              </select>
+            </label>
+            {values.compensation_type === 'paid' && (
+              <>
+                {field('compensation_amount', t.amount, 'number', true, 12)}
+                <label className="field">
+                  {t.currency}
+                  <select
+                    value={values.currency}
+                    onChange={(e) => change('currency', e.target.value)}
+                  >
+                    {['DKK', 'EUR', 'SEK', 'NOK', 'GBP'].map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            )}
+          </div>
+          <label className="field" style={{ marginTop: 20 }}>
+            <span className="field-label">
+              {t.information} <small>{t.optional}</small>
+            </span>
+            <textarea
+              name="description"
+              value={values.description}
+              onChange={(e) => change('description', e.target.value)}
+              maxLength={5000}
+            />
+          </label>
         </section>
         <section className="form-panel">
           <h2>{t.attachments}</h2>

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { dictionary, type Dictionary, type Locale } from '@/lib/i18n';
 import { type Ensemble, ensembleSchema } from '@/lib/ensembles';
+import { VenueField } from '@/components/venue-field';
 import { SeatingEditor } from '@/components/seating-editor';
 import { readSeating, type EnsembleType } from '@/lib/seating';
 import { saveEnsemble } from '@/app/ensemble-actions';
@@ -28,10 +29,6 @@ export function EnsembleForm({
     name: ensemble?.name || '',
     venue: ensemble?.venue || '',
     address: ensemble?.address || '',
-    description: ensemble?.description || '',
-    compensation_type: ensemble?.compensation_type || 'negotiable',
-    compensation_amount: ensemble?.compensation_amount?.toString() || '',
-    currency: ensemble?.currency || 'DKK',
     organizer_name: profile.name,
     organizer_phone: profile.phone,
   });
@@ -86,50 +83,13 @@ export function EnsembleForm({
       <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <section className="form-panel">
           <h2>{t.sharedDefaults}</h2>
-          <div className="form-grid">
-            {field('name', t.ensemble, true, 150)}
-            {field('venue', t.venue, true)}
-            {field('address', t.address, false, 300)}
-            <label className="field">
-              {t.compensation}
-              <select
-                name="compensation_type"
-                value={values.compensation_type}
-                onChange={(e) => change('compensation_type', e.target.value)}
-              >
-                <option value="negotiable">{t.negotiable}</option>
-                <option value="unpaid">{t.unpaid}</option>
-                <option value="paid">{t.paid}</option>
-              </select>
-            </label>
-            {values.compensation_type === 'paid' && (
-              <>
-                {field('compensation_amount', t.amount, true, 12, 'number')}
-                <label className="field">
-                  {t.currency}
-                  <select
-                    value={values.currency}
-                    onChange={(e) => change('currency', e.target.value)}
-                  >
-                    {['DKK', 'EUR', 'SEK', 'NOK', 'GBP'].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </label>
-              </>
-            )}
-          </div>
-          <label className="field" style={{ marginTop: 22 }}>
-            <span className="field-label">
-              {t.information} <small>{t.optional}</small>
-            </span>
-            <textarea
-              name="description"
-              value={values.description}
-              onChange={(e) => change('description', e.target.value)}
-              maxLength={5000}
-            />
-          </label>
+          {field('name', t.ensemble, true, 150)}
+          <VenueField
+            locale={locale}
+            venue={values.venue}
+            address={values.address}
+            onChange={(venue, address) => setValues((v) => ({ ...v, venue, address }))}
+          />
         </section>
         <SeatingEditor
           locale={locale}

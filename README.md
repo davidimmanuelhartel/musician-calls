@@ -2,7 +2,7 @@
 
 A mobile-first English/Danish web app for orchestras, big bands and ensembles to find substitute musicians. “Tutti” is a working product name.
 
-Create a private ensemble once, save its usual venue, fee and practical information, and invite orchestra members. Any member can publish a call using those defaults, attach PDFs, review availability responses and select a substitute. Musicians do not need accounts. Selection fills the call; the organizer contacts the musician directly to confirm arrangements.
+Create a private ensemble once, save its usual venue/address and instrumentation, and invite orchestra members. Any member can publish a call using those defaults, attach PDFs, review availability responses and select a substitute. Musicians do not need accounts. Selection fills the call; the organizer contacts the musician directly to confirm arrangements.
 
 ## Run locally
 
@@ -40,7 +40,7 @@ npx supabase migration up --local
 - `/{locale}/join/{token}`: join the existing ensemble through a private invite and verified email sign-in.
 
 - `/en` and `/da`: upcoming open calls, soonest first.
-- `/{locale}/calls/new?ensemble={id}`: member-only call form with saved ensemble details. Instrument, date and call time are the main required inputs; venue, fee and practical information can be overridden for this call. Drafts and PDFs are saved separately per account and ensemble. Without an ensemble, this route redirects to your ensemble list.
+- `/{locale}/calls/new?ensemble={id}`: member-only call form with saved ensemble details. Instrument, date and call time are the main required inputs; venue can be changed for this call; compensation and practical information are entered per call. Drafts and PDFs are saved separately per account and ensemble. Without an ensemble, this route redirects to your ensemble list.
 - `/{locale}/calls/{id}`: public detail, PDF links, available/maybe response form.
 - `/{locale}/dashboard`: compatibility redirect to your ensemble list.
 - `/{locale}/dashboard/{id}`: private responses and atomic selection, available to members of the call’s ensemble.
@@ -91,3 +91,9 @@ See [v0 implementation notes](docs/V0_PLAN.md) and [deployment notes](docs/DEPLO
 ### Ensemble instrumentation
 
 Ensemble owners can select editable templates for symphony, chamber, string and wind orchestras, brass bands and big bands, or start with a custom list. Each chair/section stores an instrument and English/Danish labels. Members choose saved chairs when creating calls, with a custom-instrument fallback. Existing ensembles start with an empty custom list; owners configure them through Edit ensemble. Published calls keep their original instrument and chair when the ensemble changes. A visual seating map is deferred.
+
+### Venue search
+
+Ensemble setup stores a name, venue/address and instrumentation. Fees and practical notes are entered separately for each substitute call. Old published calls retain their snapshots.
+
+Venue/address autocomplete uses Photon/OpenStreetMap, restricted to Denmark for this POC. It searches after a 450ms pause, only for signed-in users, and includes a manual correction/fallback. Selecting a result fills the formatted street, postcode, city and country when provided by the source; editing the venue clears the previous address to avoid a mismatched pair. Search does not infer missing house numbers. Photon’s public demo endpoint permits moderate project usage but has no availability guarantee; use a hosted service or own instance before scaling: https://github.com/komoot/photon#demo-server.

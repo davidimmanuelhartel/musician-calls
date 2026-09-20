@@ -130,12 +130,6 @@ export default async function EnsemblePage({
             <div className="saved-defaults">
               <strong>{ensemble.venue}</strong>
               {ensemble.address && <span>{ensemble.address}</span>}
-              <span>
-                {ensemble.compensation_type === 'paid'
-                  ? `${ensemble.compensation_amount} ${ensemble.currency}`
-                  : t[ensemble.compensation_type as 'unpaid' | 'negotiable']}
-              </span>
-              {ensemble.description && <p className="prose">{ensemble.description}</p>}
             </div>
             {owner ? (
               <Link

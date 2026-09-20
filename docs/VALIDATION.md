@@ -3,7 +3,7 @@
 - TypeScript, ESLint and the production build pass.
 - Eight focused tests pass, including required ensemble context and safe sign-in return paths.
 - Seven browser/database tests pass, covering ensemble ownership, private membership, joining through a reusable invite, invitation rotation/expiry, member removal, blocked nonmember publishing, shared defaults, and immutable published snapshots.
-- The browser verifies that an invited member reaches the same ensemble, creates a call without re-entering the name, contact, venue or fee, and that another ensemble member can access its response management.
+- The browser verifies that an invited member reaches the same ensemble, creates a call without re-entering the name, contact or venue, and that another ensemble member can access its response management.
 - Drafts remain isolated across ensembles and survive EN/DA switching, including PDFs.
 - The full mobile flow passes: real local email login, ensemble setup, failed PDF upload and retry, anonymous musician response, selection and rejection of stale-page submissions after filling.
 - Existing duplicate-response, expiry, rate-limit and concurrent-selection checks pass.

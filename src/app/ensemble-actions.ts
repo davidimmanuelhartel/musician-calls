@@ -15,9 +15,10 @@ export async function saveEnsemble(input: unknown, existingId?: string): Promise
     ensemble: existingId,
     payload: {
       ...value,
-      compensation_amount:
-        value.compensation_type === 'paid' ? Number(value.compensation_amount) : null,
-      currency: value.compensation_type === 'paid' ? value.currency : null,
+      description: '',
+      compensation_type: 'negotiable',
+      compensation_amount: null,
+      currency: null,
     },
   });
   if (error)

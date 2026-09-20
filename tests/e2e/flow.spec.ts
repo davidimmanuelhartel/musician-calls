@@ -42,8 +42,6 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await page.getByRole('link', { name: 'Create an ensemble', exact: true }).click();
   await page.getByLabel('Ensemble name').fill(`Test Orchestra ${suffix}`);
   await page.getByLabel('Venue / location').fill('Frederiksberg Musikhus');
-  await page.getByRole('combobox', { name: 'Compensation', exact: true }).selectOption('paid');
-  await page.getByLabel('Amount').fill('800');
   await page.getByLabel('Your name').fill('Test Organizer');
   await page.getByRole('button', { name: 'Create an ensemble', exact: true }).click();
   await expect(
@@ -57,6 +55,9 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await page.getByLabel('Date', { exact: false }).fill(tomorrow);
   await page.getByLabel('Call time').fill('16:30');
   await page.getByLabel('Performance time').fill('19:30');
+  await page.getByRole('combobox', { name: 'Compensation', exact: true }).selectOption('paid');
+  await page.getByLabel('Amount').fill('800');
+
   await page
     .getByLabel('Add PDFs')
     .setInputFiles({ name: 'Beethoven5.pdf', mimeType: 'application/pdf', buffer: pdf });

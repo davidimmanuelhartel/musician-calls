@@ -54,17 +54,19 @@ export function SeatingEditor({
           ))}
         </select>
       </label>
-      <button
-        type="button"
-        className="button secondary small"
-        style={{ margin: '16px 0' }}
-        onClick={() => {
-          if (!chairs.length || window.confirm(t.replaceSeating))
-            onChange(type, seatingTemplate(type));
-        }}
-      >
-        {t.applyTemplate}
-      </button>
+      {type !== 'custom' && (
+        <button
+          type="button"
+          className="button secondary small"
+          style={{ margin: '16px 0', display: 'block' }}
+          onClick={() => {
+            if (!chairs.length || window.confirm(t.replaceSeating))
+              onChange(type, seatingTemplate(type));
+          }}
+        >
+          {t.applyTemplate}
+        </button>
+      )}
       <datalist id="chair-suggestions">
         {labels.map((label) => (
           <option key={label} value={label} />
@@ -101,6 +103,7 @@ export function SeatingEditor({
         className="button secondary small"
         type="button"
         disabled={chairs.length >= 100}
+        style={{ marginTop: 16 }}
         onClick={() => onChange(type, [...chairs, { instrument: 'other', en: '', da: '' }])}
       >
         {t.addChair}

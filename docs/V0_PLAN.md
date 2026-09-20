@@ -12,7 +12,7 @@ Public pages include upcoming open calls and individual calls, including filled 
 
 ## Private ensembles and publication
 
-An ensemble is created once and shared through membership. The creator is its owner and manages the name, usual venue/address, fee/currency and practical information. Each current member can create calls from the private page and manage responses together. Only the owner can edit ensemble defaults and invite or remove members.
+An ensemble is created once and shared through membership. The creator is its owner and manages the name, usual venue/address and instrumentation. Compensation and practical information belong to each individual call. Each current member can create calls from the private page and manage responses together. Only the owner can edit ensemble defaults and invite or remove members.
 
 The public “Find a substitute” entry leads to the user's ensembles. `/{locale}/calls/new` requires an ensemble query parameter and current membership; a missing ensemble redirects to the ensemble list. Both the Server Action and the database require an ensemble ID, and the database checks membership rather than trusting the browser. It derives the ensemble name and contact identity from stored records.
 
