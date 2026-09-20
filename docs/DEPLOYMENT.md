@@ -1,6 +1,14 @@
 # Deploying the POC
 
-The implementation runs locally. These steps are needed for a hosted pilot.
+The POC is hosted at https://musician-calls.vercel.app.
+
+- Vercel project: https://vercel.com/davidimmanuelhartels-projects/musician-calls
+- Supabase project: https://supabase.com/dashboard/project/etwqitrdbmnkumqyvntg (personal organization, Stockholm / eu-north-1).
+- GitHub `main` is connected to Vercel for automatic deployment.
+- All four database migrations are applied. Production credentials are configured in Vercel; local development continues using the separate Docker database.
+- Hosted Auth callbacks are configured for the production origin. Custom SMTP is still required for sign-in emails to users outside the Supabase project team. The free default sender also rejects custom email templates, so hosted emails retain Supabase defaults until SMTP is configured. The callback supports both standard PKCE links and custom token-hash links.
+
+The following steps document setup for another environment:
 
 1. Create a separate Supabase project and apply `supabase/migrations` with the Supabase CLI. Use a dedicated project, never an existing application's database.
 2. Configure the environment values listed in `.env.example`. `APP_URL` must be the canonical HTTPS origin. Set a strong random `RATE_LIMIT_SECRET`; keep it and the service-role key server-side.

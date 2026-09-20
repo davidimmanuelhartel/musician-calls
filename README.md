@@ -1,5 +1,7 @@
 # Tutti — substitute calls
 
+Hosted POC: https://musician-calls.vercel.app — general-user sign-in emails still require custom SMTP (see [deployment notes](docs/DEPLOYMENT.md)).
+
 A mobile-first English/Danish web app for orchestras, big bands and ensembles to find substitute musicians. “Tutti” is a working product name.
 
 Create a private ensemble once, save its usual venue/address and instrumentation, and invite orchestra members. Any member can publish a call using those defaults, attach PDFs, review availability responses and select a substitute. Musicians do not need accounts. Selection fills the call; the organizer contacts the musician directly to confirm arrangements.
