@@ -238,7 +238,7 @@ test('members join the existing private page and create simpler calls; drafts st
   await mp
     .getByLabel('Date', { exact: false })
     .fill(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
-  await mp.getByLabel('Call time').fill('18:00');
+  await mp.getByRole('textbox', { name: 'Time *', exact: true }).fill('18:00');
   await mp.getByRole('button', { name: 'Publish call', exact: true }).click();
   await expect(mp.getByText('Call published', { exact: false }).first()).toBeVisible();
   const callId = new URL(mp.url()).pathname.split('/').pop()!;
@@ -300,7 +300,7 @@ test('seating templates can be customized and reused for bilingual calls', async
   await page
     .getByLabel('Date', { exact: false })
     .fill(new Date(Date.now() + 86400000).toISOString().slice(0, 10));
-  await page.getByLabel('Call time').fill('18:00');
+  await page.getByRole('textbox', { name: 'Time *', exact: true }).fill('18:00');
   await page.getByRole('button', { name: 'Publish call', exact: true }).click();
   await expect(page.getByText('Call published', { exact: false }).first()).toBeVisible();
   const callId = new URL(page.url()).pathname.split('/').pop()!;

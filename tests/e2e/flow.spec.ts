@@ -53,8 +53,10 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await page.getByLabel('Instrument', { exact: false }).selectOption('trombone');
   await page.getByLabel('Position / chair').fill('2nd Trombone');
   await page.getByLabel('Date', { exact: false }).fill(tomorrow);
-  await page.getByLabel('Call time').fill('16:30');
+  await page.getByRole('textbox', { name: 'Time *', exact: true }).fill('16:30');
   await page.getByLabel('Performance time').fill('19:30');
+  await expect(page.getByLabel('Repertoire')).toHaveCount(0);
+  await page.locator('.form-panel').first().screenshot({ path: 'test-results/call-essentials.png' });
   await page.getByRole('combobox', { name: 'Compensation', exact: true }).selectOption('paid');
   await page.getByLabel('Amount').fill('800');
 

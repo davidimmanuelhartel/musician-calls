@@ -48,6 +48,8 @@ export function CreateCallForm({
         setValues({
           ...JSON.parse(serializedDefaults),
           ...d?.values,
+          description: [d?.values.description, d?.values.repertoire].filter(Boolean).join('\n\n'),
+          repertoire: '',
           id: d?.values.id || crypto.randomUUID(),
         });
         setFiles(d?.files || []);
@@ -286,17 +288,6 @@ export function CreateCallForm({
             {field('date', t.date, 'date', true)}
             {field('call_time', t.callTime, 'time', true)}
             {field('performance_time', t.performance, 'time')}
-            <label className="field full">
-              <span className="field-label">
-                {t.repertoire} <small>{t.optional}</small>
-              </span>
-              <textarea
-                name="repertoire"
-                value={values.repertoire}
-                onChange={(e) => change('repertoire', e.target.value)}
-                maxLength={3000}
-              />
-            </label>
           </div>
           <p className="hint">{t.timezone}</p>
         </section>
