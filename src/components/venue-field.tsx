@@ -59,10 +59,21 @@ export function VenueField({
         aria-expanded={results.length > 0}
         aria-controls={`${id}-results`}
         aria-activedescendant={active >= 0 ? `${id}-${active}` : undefined}
-        aria-describedby={`${id}-hint`}
-        value={venue}
+        value={
+          address
+            ? address.startsWith(`${venue},`) || address === venue
+              ? address
+              : `${venue}, ${address}`
+            : venue
+        }
         onChange={(e) => {
-          onChange(e.target.value, '');
+          const text = e.target.value;
+          const prefix = `${venue}, `;
+          if (address && text.startsWith(prefix) && !address.startsWith(prefix)) {
+            onChange(venue, text.slice(prefix.length));
+          } else {
+            onChange(text, '');
+          }
           setQuery(e.target.value);
           setResults([]);
           setActive(-1);
@@ -118,28 +129,11 @@ export function VenueField({
           ))}
         </ul>
       )}
-      <p className="hint" id={`${id}-hint`}>
-        {t.venueHint}
-      </p>
       {status && (
         <p className="hint" role="status">
           {t[status as 'venueSearching' | 'venueUnavailable' | 'venueNoResults']}
         </p>
       )}
-      {address && <p className="venue-address">{address}</p>}
-      <details className="venue-manual">
-        <summary>{t.venueManual}</summary>
-        <label className="field">
-          {t.address}
-          <input
-            name="address"
-            maxLength={300}
-            value={address}
-            autoComplete="street-address"
-            onChange={(e) => onChange(venue, e.target.value)}
-          />
-        </label>
-      </details>
       <p className="venue-credit">
         ©{' '}
         <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">

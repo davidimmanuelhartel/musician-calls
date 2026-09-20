@@ -390,9 +390,7 @@ test('slim ensemble form links a real address result to its venue and keeps fees
   );
   await venue.press('ArrowDown');
   await venue.press('Enter');
-  await expect(page.locator('.venue-address')).toContainText(
-    'Falkoner Alle 9, 2000 Frederiksberg, Denmark',
-  );
+  await expect(venue).toHaveValue('Falkoner Alle 9, 2000 Frederiksberg, Denmark');
   await venue.fill('DR Koncerthuset');
   await expect(page.locator('.venue-address')).toHaveCount(0);
   await expect(page.locator('.venue-results').getByRole('option').first()).toContainText(
@@ -402,18 +400,21 @@ test('slim ensemble form links a real address result to its venue and keeps fees
     },
   );
   await page.locator('.venue-results').getByRole('option').first().click();
-  await expect(page.locator('.venue-address')).toContainText('Emil Holms Kanal');
+  await expect(
+    page.getByRole('combobox', { name: /Venue \/ location|Spillested \/ sted/ }),
+  ).toHaveValue(/DR Koncerthuset, Emil Holms Kanal/);
   await page.screenshot({ path: 'test-results/venue-en-desktop.png', fullPage: true });
   await page.getByRole('button', { name: 'Create an ensemble', exact: true }).click();
   await expect(page).toHaveURL(/\/en\/ensembles\/[a-f0-9-]+$/);
   const id = new URL(page.url()).pathname.split('/').pop()!;
   await page.goto(`/da/ensembles/${id}/edit`);
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.locator('.venue-address')).toContainText('Emil Holms Kanal');
-  await page.getByText('Indtast eller ret adressen manuelt', { exact: true }).click();
+  await expect(
+    page.getByRole('combobox', { name: /Venue \/ location|Spillested \/ sted/ }),
+  ).toHaveValue(/DR Koncerthuset, Emil Holms Kanal/);
   await page
-    .getByLabel('Adresse', { exact: true })
-    .fill('Emil Holms Kanal, 1421 København, Danmark');
+    .getByRole('combobox', { name: 'Spillested / sted *', exact: true })
+    .fill('DR Koncerthuset, Emil Holms Kanal, 1421 København, Danmark');
   await page.screenshot({ path: 'test-results/venue-da-mobile.png', fullPage: true });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Gem ændringer', exact: true }).click();

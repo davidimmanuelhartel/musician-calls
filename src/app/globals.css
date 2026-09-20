@@ -1168,17 +1168,6 @@ dialog p {
   color: var(--muted);
   font-size: 12px;
 }
-.venue-address {
-  font-size: 13px;
-  margin: 12px 0;
-}
-.venue-manual {
-  margin-top: 12px;
-  font-size: 12px;
-}
-.venue-manual .field {
-  margin-top: 12px;
-}
 .venue-credit {
   margin: 10px 0 0;
   color: var(--muted);
