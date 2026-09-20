@@ -7,7 +7,7 @@ const optionalText = (max: number) => z.string().trim().max(max).default('');
 export const callSchema = z
   .object({
     id: z.uuid(),
-    ensemble_name: z.string().trim().min(1).max(150),
+    ensemble_id: z.uuid(),
     instrument: z.enum(Object.keys(instruments) as [string, ...string[]]),
     position: optionalText(100),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -20,8 +20,6 @@ export const callSchema = z
     compensation_type: z.enum(['paid', 'unpaid', 'negotiable']),
     compensation_amount: optionalText(12),
     currency: z.enum(['DKK', 'EUR', 'SEK', 'NOK', 'GBP']),
-    organizer_name: z.string().trim().min(1).max(100),
-    organizer_phone: optionalText(40),
   })
   .superRefine((v, ctx) => {
     if (
@@ -48,6 +46,7 @@ export type CallInput = z.infer<typeof callSchema>;
 export type Call = {
   id: string;
   organizer_id: string;
+  ensemble_id: string;
   ensemble_name: string;
   instrument: string;
   position: string | null;
@@ -135,7 +134,21 @@ export function feeLabel(
     : dictionary(locale)[call.compensation_type];
 }
 export function safeNext(next: string | null, locale: Locale) {
-  return next && new RegExp(`^/${locale}/(?:calls/new|dashboard(?:/[0-9a-f-]{36})?)$`).test(next)
-    ? next
-    : `/${locale}/dashboard`;
+  const fallback = `/${locale}/ensembles`;
+  if (typeof next !== 'string' || !next.startsWith(`/${locale}/`) || next.includes('\\'))
+    return fallback;
+  const url = new URL(next, 'https://tutti.invalid');
+  if (url.hash) return fallback;
+  const id = '[0-9a-f-]{36}';
+  const route = new RegExp(
+    `^/${locale}/(?:ensembles(?:/new|/${id}(?:/edit)?)?|join/[a-f0-9]{64}|dashboard(?:/${id})?)$`,
+  );
+  if (route.test(url.pathname) && !url.search) return next;
+  if (
+    url.pathname === `/${locale}/calls/new` &&
+    url.searchParams.size === 1 &&
+    z.uuid().safeParse(url.searchParams.get('ensemble')).success
+  )
+    return next;
+  return fallback;
 }

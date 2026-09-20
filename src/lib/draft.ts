@@ -1,6 +1,6 @@
 'use client';
 export type Draft = { values: Record<string, string>; files: File[] };
-let cachedFiles: File[] | undefined;
+const cachedFiles = new Map<string, File[]>();
 let pendingWrite: Promise<void> = Promise.resolve();
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -10,17 +10,19 @@ function openDB(): Promise<IDBDatabase> {
     request.onerror = () => reject(request.error);
   });
 }
-export async function readDraft(): Promise<Draft | undefined> {
+export async function readDraft(scope: string): Promise<Draft | undefined> {
   await pendingWrite.catch(() => undefined);
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction('drafts', 'readonly');
-    const values = tx.objectStore('drafts').get('values');
-    const files = tx.objectStore('drafts').get('files');
+    const values = tx.objectStore('drafts').get(`${scope}:values`);
+    const files = tx.objectStore('drafts').get(`${scope}:files`);
     tx.oncomplete = () => {
       db.close();
-      cachedFiles = files.result || [];
-      resolve(values.result ? { values: values.result, files: cachedFiles! } : undefined);
+      cachedFiles.set(scope, files.result || []);
+      resolve(
+        values.result ? { values: values.result, files: cachedFiles.get(scope)! } : undefined,
+      );
     };
     tx.onerror = () => {
       db.close();
@@ -28,7 +30,7 @@ export async function readDraft(): Promise<Draft | undefined> {
     };
   });
 }
-export function writeDraft(draft: Draft) {
+export function writeDraft(scope: string, draft: Draft) {
   // Serialize writes, including route changes, and avoid copying up to 200 MB of PDFs on each keystroke.
   pendingWrite = pendingWrite
     .catch(() => undefined)
@@ -36,10 +38,11 @@ export function writeDraft(draft: Draft) {
       const db = await openDB();
       return new Promise<void>((resolve, reject) => {
         const tx = db.transaction('drafts', 'readwrite');
-        tx.objectStore('drafts').put(draft.values, 'values');
-        if (cachedFiles !== draft.files) tx.objectStore('drafts').put(draft.files, 'files');
+        tx.objectStore('drafts').put(draft.values, `${scope}:values`);
+        if (cachedFiles.get(scope) !== draft.files)
+          tx.objectStore('drafts').put(draft.files, `${scope}:files`);
         tx.oncomplete = () => {
-          cachedFiles = draft.files;
+          cachedFiles.set(scope, draft.files);
           db.close();
           resolve();
         };
@@ -51,14 +54,15 @@ export function writeDraft(draft: Draft) {
     });
   return pendingWrite;
 }
-export async function clearDraft() {
+export async function clearDraft(scope: string) {
   await pendingWrite.catch(() => undefined);
   const db = await openDB();
   return new Promise<void>((resolve, reject) => {
     const tx = db.transaction('drafts', 'readwrite');
-    tx.objectStore('drafts').clear();
+    tx.objectStore('drafts').delete(`${scope}:values`);
+    tx.objectStore('drafts').delete(`${scope}:files`);
     tx.oncomplete = () => {
-      cachedFiles = undefined;
+      cachedFiles.delete(scope);
       db.close();
       resolve();
     };

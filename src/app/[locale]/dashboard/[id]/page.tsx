@@ -3,7 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
 import { currentUser } from '@/lib/supabase/server';
-import { getCall, getResponses } from '@/lib/data';
+import { getCall, getResponses, getEnsemble } from '@/lib/data';
 import { callStatus } from '@/lib/domain';
 import { CopyLink } from '@/components/copy-link';
 import { SelectMusician } from '@/components/select-musician';
@@ -17,7 +17,7 @@ export default async function Manage({
   const user = await currentUser();
   if (!user) redirect(`/${locale}/login?next=/${locale}/dashboard/${id}`);
   const call = await getCall(id);
-  if (!call || call.organizer_id !== user.id) notFound();
+  if (!call || !(await getEnsemble(call.ensemble_id))) notFound();
   const t = dictionary(locale);
   const responses = await getResponses([id]);
   const status = callStatus(call);
@@ -36,9 +36,9 @@ export default async function Manage({
   ];
   return (
     <div className="page">
-      <Link className="back" href={`/${locale}/dashboard`}>
+      <Link className="back" href={`/${locale}/ensembles/${call.ensemble_id}`}>
         <ArrowLeft />
-        {t.yourCalls}
+        {t.ensembleBack}
       </Link>
       <div className="section-head">
         <div className="page-title" style={{ marginBottom: 0 }}>

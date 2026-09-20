@@ -4,6 +4,65 @@ export function isLocale(value: string): value is Locale {
   return value === 'en' || value === 'da';
 }
 export const en = {
+  myEnsembles: 'My ensembles',
+  newEnsemble: 'Create an ensemble',
+  ensembleIntro:
+    'One private home for your ensemble. Save the details once, then find substitutes together.',
+  privateEnsemble: 'Private ensemble',
+  sharedDefaults: 'Saved ensemble details',
+  editEnsemble: 'Edit ensemble',
+  saveEnsemble: 'Save ensemble',
+  profileIntro:
+    'Add your usual venue, fee and practical information. Every member can reuse them when publishing a call.',
+  noEnsembles: 'Your ensemble starts here.',
+  noEnsemblesText:
+    'Create your ensemble once, or ask a member for an invite link to an existing ensemble.',
+  openEnsemble: 'Open ensemble',
+  ensembleBack: 'Back to ensemble',
+  members: 'Members',
+  owner: 'Owner',
+  member: 'Member',
+  inviteMembers: 'Invite your orchestra',
+  generateInvite: 'Create invite link',
+  replaceInvite: 'Replace invite link',
+  inviteHint:
+    'Share this private link only with orchestra members. It works for 30 days. A new link replaces the previous one.',
+  inviteReady:
+    'Anyone with this link can join after signing in. Share it with your orchestra members.',
+  joinEnsemble: 'Join ensemble',
+  joinIntro:
+    'You have been invited to a private ensemble. Sign in to join the same workspace as your orchestra.',
+  joinNote:
+    'Members can publish calls, read responses and select substitutes. Your name is visible to other members.',
+  invalidInvite: 'This invite is invalid or has expired. Ask the ensemble owner for a new link.',
+  ensembleAccess: 'You do not have access to this ensemble. Ask the owner for an invitation.',
+  ensembleExists: 'You already have an ensemble with this name. Open its page instead.',
+  savedDetails:
+    'These details are included automatically. Change them only if this call is different.',
+  changeCallDetails: 'Change details for this call',
+  callOnlyChanges: 'Changes here apply only to this call. Your ensemble defaults stay the same.',
+  callFromEnsemble: 'A substitute for your ensemble',
+  callFromEnsembleIntro:
+    'Choose the instrument and when you need someone. Your ensemble details are already filled in.',
+  postedBy: 'Posting as',
+  teamContact: 'Your contact details are saved. Other ensemble members can help manage this call.',
+  ensembleCalls: 'Ensemble calls',
+  noEnsembleCalls: 'No calls yet.',
+  noEnsembleCallsText: 'Any member can create the first call from this page.',
+  memberDefaults:
+    'The owner manages these shared details. You can adjust them when creating a call.',
+  removeMember: 'Remove member',
+  removeMemberTitle: 'Remove this member?',
+  removeMemberText:
+    'They will lose access to the private page and its responses. Existing invite links will also stop working.',
+  memberRemoved: 'Member removed. Create a new invite link when you next invite someone.',
+  createEnsembleFirst: 'Choose your ensemble before publishing a call.',
+  privatePageNote:
+    'Only members can see this page. Published calls and their attachments are public.',
+  contactOnce: 'Your name is saved for future calls.',
+  returnEnsembles: 'Back to my ensembles',
+  saveChanges: 'Save changes',
+
   openCalls: 'Open calls',
   findSub: 'Find a substitute',
   dashboard: 'Dashboard',
@@ -14,7 +73,7 @@ export const en = {
   browse: 'Explore open calls',
   how: 'A missing player. A simple solution.',
   step1: 'Post your call',
-  step1text: 'Add the part, the place and the practical details.',
+  step1text: 'Open your ensemble and add the part and the date.',
   step2: 'Share with your network',
   step2text: 'Send one link to the musicians you know.',
   step3: 'Find your substitute',
@@ -77,7 +136,7 @@ export const en = {
   shareText: 'Share this link with your musician network.',
   respondTitle: 'Put your name forward.',
   respondIntro:
-    'Your details go privately to the organizer, who will contact you to confirm arrangements.',
+    'Your details go privately to the ensemble’s members, who can contact you to confirm arrangements.',
   send: 'Send availability',
   sending: 'Sending…',
   thanks: 'Thanks for stepping in.',
@@ -128,7 +187,7 @@ export const en = {
   returnHome: 'Return to open calls',
   working: 'Working…',
   privacy:
-    'Only the organizer can see your response. Your contact information is used to arrange this call.',
+    'Only ensemble members can see your response. Your contact information is used to arrange this call.',
   countUnit: 'responses',
   chooseAvailability: 'Choose your availability',
   selectFailed:
@@ -139,6 +198,68 @@ export const en = {
 };
 export type Dictionary = { [K in keyof typeof en]: string };
 export const da: Dictionary = {
+  myEnsembles: 'Mine ensembler',
+  newEnsemble: 'Opret et ensemble',
+  ensembleIntro:
+    'Ét privat sted til dit ensemble. Gem oplysningerne én gang, og find vikarer sammen.',
+  privateEnsemble: 'Privat ensemble',
+  sharedDefaults: 'Gemte ensembleoplysninger',
+  editEnsemble: 'Rediger ensemble',
+  saveEnsemble: 'Gem ensemble',
+  profileIntro:
+    'Tilføj jeres sædvanlige spillested, honorar og praktiske oplysninger. Alle medlemmer kan genbruge dem i nye opslag.',
+  noEnsembles: 'Dit ensemble starter her.',
+  noEnsemblesText:
+    'Opret dit ensemble én gang, eller bed et medlem om et invitationslink til et eksisterende ensemble.',
+  openEnsemble: 'Åbn ensemble',
+  ensembleBack: 'Tilbage til ensemble',
+  members: 'Medlemmer',
+  owner: 'Ejer',
+  member: 'Medlem',
+  inviteMembers: 'Inviter dit orkester',
+  generateInvite: 'Opret invitationslink',
+  replaceInvite: 'Udskift invitationslink',
+  inviteHint:
+    'Del kun dette private link med orkestrets medlemmer. Det gælder i 30 dage. Et nyt link erstatter det gamle.',
+  inviteReady:
+    'Alle med dette link kan tilmelde sig efter login. Del det med orkestrets medlemmer.',
+  joinEnsemble: 'Tilmeld dig ensemblet',
+  joinIntro:
+    'Du er inviteret til et privat ensemble. Log ind for at bruge den samme side som dit orkester.',
+  joinNote:
+    'Medlemmer kan oprette opslag, læse svar og vælge vikarer. Andre medlemmer kan se dit navn.',
+  invalidInvite: 'Invitationen er ugyldig eller udløbet. Bed ensemblets ejer om et nyt link.',
+  ensembleAccess: 'Du har ikke adgang til dette ensemble. Bed ejeren om en invitation.',
+  ensembleExists: 'Du har allerede et ensemble med dette navn. Åbn dets side i stedet.',
+  savedDetails:
+    'Disse oplysninger tilføjes automatisk. Ret dem kun, hvis dette opslag er anderledes.',
+  changeCallDetails: 'Ret oplysninger for dette opslag',
+  callOnlyChanges:
+    'Ændringer her gælder kun dette opslag. Ensemblets gemte oplysninger ændres ikke.',
+  callFromEnsemble: 'En vikar til dit ensemble',
+  callFromEnsembleIntro:
+    'Vælg instrument, og hvornår I mangler en musiker. Ensemblets oplysninger er allerede udfyldt.',
+  postedBy: 'Du opretter som',
+  teamContact:
+    'Dine kontaktoplysninger er gemt. Andre medlemmer kan hjælpe med at håndtere dette opslag.',
+  ensembleCalls: 'Ensemblets opslag',
+  noEnsembleCalls: 'Ingen opslag endnu.',
+  noEnsembleCallsText: 'Alle medlemmer kan oprette det første opslag fra denne side.',
+  memberDefaults:
+    'Ejeren administrerer disse fælles oplysninger. Du kan tilpasse dem, når du opretter et opslag.',
+  removeMember: 'Fjern medlem',
+  removeMemberTitle: 'Vil du fjerne dette medlem?',
+  removeMemberText:
+    'Medlemmet mister adgangen til den private side og dens svar. Eksisterende invitationslinks stopper også med at virke.',
+  memberRemoved:
+    'Medlemmet er fjernet. Opret et nyt invitationslink, næste gang du inviterer nogen.',
+  createEnsembleFirst: 'Vælg dit ensemble, før du opretter et opslag.',
+  privatePageNote:
+    'Kun medlemmer kan se denne side. Offentliggjorte opslag og deres bilag er offentlige.',
+  contactOnce: 'Dit navn gemmes til fremtidige opslag.',
+  returnEnsembles: 'Tilbage til mine ensembler',
+  saveChanges: 'Gem ændringer',
+
   openCalls: 'Åbne opslag',
   findSub: 'Find en vikar',
   dashboard: 'Overblik',
@@ -149,7 +270,7 @@ export const da: Dictionary = {
   browse: 'Se åbne opslag',
   how: 'En ledig stol. En enkel løsning.',
   step1: 'Opret dit opslag',
-  step1text: 'Tilføj stemmen, spillestedet og de praktiske oplysninger.',
+  step1text: 'Åbn dit ensemble, og tilføj stemmen og datoen.',
   step2: 'Del med dit netværk',
   step2text: 'Send ét link til de musikere, du kender.',
   step3: 'Find din vikar',
@@ -213,7 +334,7 @@ export const da: Dictionary = {
   shareText: 'Del dette link med dit musikernetværk.',
   respondTitle: 'Meld dig på banen.',
   respondIntro:
-    'Dine oplysninger sendes privat til arrangøren, som kontakter dig for at bekræfte aftalen.',
+    'Dine oplysninger sendes privat til ensemblets medlemmer, som kan kontakte dig for at bekræfte aftalen.',
   send: 'Send svar',
   sending: 'Sender…',
   thanks: 'Tak, fordi du vil spille med.',
@@ -263,7 +384,7 @@ export const da: Dictionary = {
   returnHome: 'Tilbage til åbne opslag',
   working: 'Arbejder…',
   privacy:
-    'Kun arrangøren kan se dit svar. Dine kontaktoplysninger bruges til at aftale denne opgave.',
+    'Kun ensemblets medlemmer kan se dit svar. Dine kontaktoplysninger bruges til at aftale denne opgave.',
   countUnit: 'svar',
   chooseAvailability: 'Vælg, om du kan spille',
   selectFailed:

@@ -64,7 +64,13 @@ export async function publishCall(input: unknown, files: unknown): Promise<Actio
     files: attachments.data,
   });
   if (error)
-    return { error: error.message.includes('invalid_files') ? 'uploadError' : 'genericError' };
+    return {
+      error: error.message.includes('invalid_files')
+        ? 'uploadError'
+        : error.message.includes('unauthorized')
+          ? 'ensembleAccess'
+          : 'genericError',
+    };
   revalidatePath('/', 'layout');
   return { success: true, id: data };
 }

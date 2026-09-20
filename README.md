@@ -2,7 +2,7 @@
 
 A mobile-first English/Danish web app for orchestras, big bands and ensembles to find substitute musicians. “Tutti” is a working product name.
 
-An organizer publishes a call, attaches PDFs, shares its link, reviews private availability responses and selects a musician. Musicians do not need accounts. Selection fills the call; the organizer contacts the musician directly to confirm arrangements.
+Create a private ensemble once, save its usual venue, fee and practical information, and invite orchestra members. Any member can publish a call using those defaults, attach PDFs, review availability responses and select a substitute. Musicians do not need accounts. Selection fills the call; the organizer contacts the musician directly to confirm arrangements.
 
 ## Run locally
 
@@ -23,13 +23,27 @@ The local stack uses its own project ID and ports in the 5532x range. It does no
 
 `configure-local.mjs` writes a git-ignored `.env.local` for this local stack. It does not provision cloud services. Never expose `SUPABASE_SERVICE_ROLE_KEY` in a browser bundle.
 
+## Existing local installation
+
+Apply new migrations without resetting your calls:
+
+```sh
+npx supabase migration up --local
+```
+
 ## Implemented scope
 
+- `/{locale}/ensembles`: your private ensemble memberships.
+- `/{locale}/ensembles/new`: create an ensemble once with shared defaults.
+- `/{locale}/ensembles/{id}`: shared calls, response counts, saved details and members.
+- `/{locale}/ensembles/{id}/edit`: owner-only editing of the saved details.
+- `/{locale}/join/{token}`: join the existing ensemble through a private invite and verified email sign-in.
+
 - `/en` and `/da`: upcoming open calls, soonest first.
-- `/{locale}/calls/new`: create form, local draft recovery including PDFs, verified-email publication.
+- `/{locale}/calls/new?ensemble={id}`: member-only call form with saved ensemble details. Instrument, date and call time are the main required inputs; venue, fee and practical information can be overridden for this call. Drafts and PDFs are saved separately per account and ensemble. Without an ensemble, this route redirects to your ensemble list.
 - `/{locale}/calls/{id}`: public detail, PDF links, available/maybe response form.
-- `/{locale}/dashboard`: organizer's calls and response counts.
-- `/{locale}/dashboard/{id}`: private responses and atomic selection.
+- `/{locale}/dashboard`: compatibility redirect to your ensemble list.
+- `/{locale}/dashboard/{id}`: private responses and atomic selection, available to members of the call’s ensemble.
 - `/{locale}/login` and `/auth/confirm`: email magic-link authentication.
 - EN/DA toggle preserves the route and call ID. Browser language is used initially; manual choice is remembered.
 
@@ -39,15 +53,21 @@ No profiles for musicians, automatic matching, chat, response notifications, pay
 
 ## Data and access
 
-Supabase Auth owns organizer identity. `organizer_profiles` stores default contact details. Calls contain public information; contact snapshots are in the separate private `call_contacts` table. Responses are readable only by the call owner.
+Supabase Auth owns organizer identity. `organizer_profiles` stores default contact details. Calls contain public information; contact snapshots are in the separate private `call_contacts` table. Responses and call contact snapshots are readable only by current ensemble members. Ensemble pages and membership lists are private. Public calls retain snapshots of the ensemble name and call details; editing the ensemble does not change already published calls.
 
 Database migrations define row-level security, grants and these transactional functions:
 
-- `publish_call`: verified organizer only; atomically creates the call, private contacts and attachment metadata.
+- `publish_call`: verified ensemble member only; derives the ensemble name and sender identity from trusted records and atomically creates the call, private contacts and attachment metadata.
 - `submit_response`: service-role only, reached through a validating Server Action. Serializes against selection, rejects closed calls and duplicate email responses, and limits accepted submissions to five per hashed IP per ten minutes.
-- `select_musician`: call owner only; locks the call, checks response membership and fills it with exactly one selection.
+- `select_musician`: current ensemble member only; locks the call, checks response membership and fills it with exactly one selection.
 
 PDFs upload directly to a private storage bucket before publication. Published files can be accessed by anyone with the call link via short-lived signed URLs. No musician login is required. Uploads are limited to 10 PDFs, 20 MB each. Unpublished uploads are private to their owner. For production, configure cleanup of abandoned unpublished objects; see [deployment notes](docs/DEPLOYMENT.md).
+
+## Ensemble access
+
+The creator owns the ensemble, edits its defaults, creates invite links and removes members. All current members can create calls, read responses and select substitutes. A reusable invite expires after 30 days; creating a new one invalidates the previous link. Removing a member also invalidates the outstanding invite. Invite tokens are stored as hashes, and joining requires a verified account. The app provides a link to copy; it does not send invitations itself.
+
+Existing pre-ensemble calls are preserved by the migration. They are grouped by original creator and normalized ensemble name, with that creator made the owner. Identical names from unrelated accounts are not automatically merged or given shared access.
 
 ## Verify
 
@@ -60,9 +80,9 @@ npm run build
 npm run test:e2e
 ```
 
-Playwright starts or reuses the app on port 3020. Install Chromium with `npx playwright install chromium` if it is not already available. The browser and database tests create isolated test users and calls in the local database. Do not run them against production.
+Playwright starts or reuses the app on port 3020. Install Chromium with `npx playwright install chromium` if it is not already available. The browser and database tests create synthetic users, ensembles and calls in the local database. Tests refuse non-local Supabase URLs. `node scripts/cleanup-test-data.mjs` removes only the known synthetic test accounts and their data; it preserves other local accounts and calls.
 
-The test suite checks the mobile publish/respond/select flow with a PDF, language and draft persistence, private access, duplicate submissions, expired calls, rate limiting and simultaneous selections. `npm run db:reset` resets only this local stack, including any locally created calls.
+The test suite checks ensemble creation and joining, private membership, owner permissions, shared defaults and stable call snapshots, invitation rotation/expiry, member removal, per-ensemble draft isolation, and the mobile publish/respond/select flow with PDF upload recovery. It also checks duplicate submissions, expired calls, rate limiting and simultaneous selections. `npm run db:reset` resets only this local stack, including any locally created calls.
 
 ## Product decisions and next steps
 

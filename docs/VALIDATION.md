@@ -1,16 +1,14 @@
-# Local validation — 20 September 2026
+# Local validation — private ensembles, 20 September 2026
 
-Verified against the isolated local Supabase instance and the app on port 3020.
+- TypeScript, ESLint and the production build pass.
+- Eight focused tests pass, including required ensemble context and safe sign-in return paths.
+- Seven browser/database tests pass, covering ensemble ownership, private membership, joining through a reusable invite, invitation rotation/expiry, member removal, blocked nonmember publishing, shared defaults, and immutable published snapshots.
+- The browser verifies that an invited member reaches the same ensemble, creates a call without re-entering the name, contact, venue or fee, and that another ensemble member can access its response management.
+- Drafts remain isolated across ensembles and survive EN/DA switching, including PDFs.
+- The full mobile flow passes: real local email login, ensemble setup, failed PDF upload and retry, anonymous musician response, selection and rejection of stale-page submissions after filling.
+- Existing duplicate-response, expiry, rate-limit and concurrent-selection checks pass.
+- English desktop and Danish mobile ensemble screenshots were inspected, including the mobile overflow check.
 
-- TypeScript: passes.
-- ESLint: passes without warnings.
-- Production build: passes.
-- Seven focused tests: expiration, summer/winter time, DST edge cases, event-time fallback, login return-path validation, response validation and translation parity.
-- Browser flow: mobile EN/DA draft switching, real locally delivered magic-link email, draft and PDF recovery, failed PDF upload with successful retry, publication, anonymous PDF download, Danish availability response, organizer selection, and public filled state.
-- Stale browser: submitting an already-open response form after selection is rejected.
-- Language/layout: browser preference detection, remembered manual choice, desktop/mobile screenshots and mobile overflow check.
-- Database integration: private responses and contact data, organizer isolation, rejected anonymous/direct write bypasses, duplicate email rejection, cross-call selection rejection, simultaneous selection with exactly one winner, expired-call rejection and submission rate limiting.
+The migration was applied to the existing local database without resetting it. It groups previous calls by creator and ensemble name and preserves their public snapshots and original ownership. Test cleanup targets synthetic fixture accounts, not other local data.
 
-The browser and database suites comprise four tests; the mobile test performs the complete acceptance scenario and its recovery cases. Test records were removed after verification.
-
-Not yet validated: hosted deployment, external SMTP delivery, human Danish copy review, the 60-second publication target with organizers, or qualitative usefulness in a real substitute search. No production deployment or GitHub remote has been created.
+Hosted deployment, external SMTP, human Danish copy review and real-world usability sessions remain unvalidated. The app has not been deployed to production.

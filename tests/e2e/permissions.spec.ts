@@ -16,10 +16,20 @@ async function organizer() {
 }
 async function publish(db: typeof anon) {
   const id = crypto.randomUUID();
+  const workspace = await db.rpc('save_ensemble', {
+    payload: {
+      id: crypto.randomUUID(),
+      name: `Permissions test ${id}`,
+      venue: 'Test venue',
+      compensation_type: 'unpaid',
+      organizer_name: 'Private organizer',
+    },
+  });
+  if (workspace.error) throw workspace.error;
   const { data, error } = await db.rpc('publish_call', {
     payload: {
       id,
-      ensemble_name: 'Permissions test',
+      ensemble_id: workspace.data,
       instrument: 'trombone',
       call_at: new Date(Date.now() + 86400000).toISOString(),
       performance_at: null,

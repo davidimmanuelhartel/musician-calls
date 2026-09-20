@@ -19,9 +19,9 @@ export function Header({ locale }: { locale: Locale }) {
           {t.openCalls}
         </Link>
         <Link className="nav-link" href={`/${locale}/dashboard`}>
-          {t.dashboard}
+          {t.myEnsembles}
         </Link>
-        <Link className="button small create-nav" href={`/${locale}/calls/new`}>
+        <Link className="button small create-nav" href={`/${locale}/ensembles`}>
           {t.findSub}
         </Link>
         <Suspense>

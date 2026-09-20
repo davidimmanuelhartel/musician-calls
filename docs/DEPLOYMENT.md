@@ -6,9 +6,12 @@ The implementation runs locally. These steps are needed for a hosted pilot.
 2. Configure the environment values listed in `.env.example`. `APP_URL` must be the canonical HTTPS origin. Set a strong random `RATE_LIMIT_SECRET`; keep it and the service-role key server-side.
 3. Set the Supabase Auth site URL to the app origin and allow its `/auth/confirm` redirect URL. Copy `supabase/templates/magic-link.html` into both Magic Link and Confirm Signup email templates; it supports English and Danish. Configure SMTP for real authentication email delivery.
 4. Deploy the Next.js app to a Node-compatible host, using Node 24, `npm ci`, and `npm run build`. The app uses server rendering and Server Actions; it is not a static export. PDFs upload directly to Supabase rather than through Next.js request bodies.
-5. Verify the full workflow on the hosted origin, with two different organizer accounts and an anonymous musician browser. Confirm that auth redirects, PDF links and database policies work before inviting pilot participants.
+5. Verify the full workflow on the hosted origin, with an ensemble owner, an invited member, a nonmember and an anonymous musician browser. Confirm that auth redirects, PDF links and database policies work before inviting pilot participants.
 
 ## Operational details
+
+- Apply `20260920000200_private_ensembles.sql` after the initial migration. It backfills existing calls into private ensembles without deleting calls, responses or attachments. Do not reset an existing database to upgrade.
+- Ensemble owners manage saved details and access. Current members can create and manage calls. Private invitation URLs require verified sign-in and explicit joining; no invitation email service is used.
 
 - Trust forwarded client IP headers only from the hosting proxy. On Vercel, the application reads `x-vercel-forwarded-for`; on another host, configure the proxy to overwrite `x-forwarded-for`. Do not forward arbitrary client-supplied values. The application hashes IPs and keeps rate-limit records for at most one hour during active use. These limits are basic POC abuse protection, not comprehensive anti-bot protection.
 - Supabase's built-in Auth limits control magic-link requests. The application does not send response or selection emails.

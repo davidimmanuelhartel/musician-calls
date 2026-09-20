@@ -24,7 +24,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           </h1>
           <p className="hero-description">{t.subheadline}</p>
           <div className="hero-actions">
-            <Link className="button" href={`/${locale}/calls/new`}>
+            <Link className="button" href={`/${locale}/ensembles`}>
               {t.findSub}
               <ArrowRight />
             </Link>
@@ -75,7 +75,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <Music2 size={30} />
             <h3>{t.noCalls}</h3>
             <p>{t.noCallsText}</p>
-            <Link className="button secondary" href={`/${locale}/calls/new`}>
+            <Link className="button secondary" href={`/${locale}/ensembles`}>
               {t.findSub}
               <ArrowRight />
             </Link>

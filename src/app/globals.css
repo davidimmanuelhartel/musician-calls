@@ -1044,3 +1044,58 @@ dialog p {
     transition: none !important;
   }
 }
+
+.ensemble-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 28px;
+  align-items: start;
+}
+.ensemble-layout .dashboard-row {
+  flex-wrap: wrap;
+}
+.ensemble-layout .dashboard-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.saved-defaults {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.saved-defaults .prose {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+.call-overrides {
+  margin-top: 18px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.call-overrides summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+.member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.member-row:last-child {
+  border-bottom: 0;
+}
+.member-row .hint {
+  margin: 0;
+}
+@media (max-width: 900px) {
+  .ensemble-layout {
+    grid-template-columns: 1fr;
+  }
+}

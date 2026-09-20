@@ -4,94 +4,78 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, FileText, X } from 'lucide-react';
 import { dictionary, instruments, type Locale, type Dictionary } from '@/lib/i18n';
 import { MAX_FILE_SIZE, callSchema, eventTimes } from '@/lib/domain';
+import { type Ensemble, ensembleDefaults } from '@/lib/ensembles';
 import { clearDraft, readDraft, writeDraft } from '@/lib/draft';
 import { supabaseBrowser } from '@/lib/supabase/client';
-import { publishCall, sendMagicLink } from '@/app/actions';
-const defaults: Record<string, string> = {
-  ensemble_name: '',
-  instrument: '',
-  position: '',
-  date: '',
-  call_time: '',
-  performance_time: '',
-  venue: '',
-  address: '',
-  repertoire: '',
-  description: '',
-  compensation_type: 'negotiable',
-  compensation_amount: '',
-  currency: 'DKK',
-  organizer_name: '',
-  organizer_email: '',
-  organizer_phone: '',
-};
+import { publishCall } from '@/app/actions';
 export function CreateCallForm({
   locale,
   user,
+  ensemble,
 }: {
   locale: Locale;
-  user: { id: string; email: string; name: string; phone: string } | null;
+  user: { id: string; email: string; name: string; phone: string };
+  ensemble: Ensemble;
 }) {
   const t = dictionary(locale);
   const router = useRouter();
-  const [values, setValues] = useState(defaults);
+  const scope = `call:${user.id}:${ensemble.id}`;
+  const serializedDefaults = JSON.stringify({
+    instrument: '',
+    position: '',
+    date: '',
+    call_time: '',
+    performance_time: '',
+    repertoire: '',
+    ...ensembleDefaults(ensemble),
+  });
+  const [values, setValues] = useState<Record<string, string>>({});
   const [files, setFiles] = useState<File[]>([]);
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
   const [saved, setSaved] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let live = true;
-    readDraft()
+    readDraft(scope)
       .then((d) => {
         if (!live) return;
         setValues({
-          ...defaults,
+          ...JSON.parse(serializedDefaults),
           ...d?.values,
           id: d?.values.id || crypto.randomUUID(),
-          organizer_email: user?.email || d?.values.organizer_email || '',
-          organizer_name: d?.values.organizer_name || user?.name || '',
-          organizer_phone: d?.values.organizer_phone || user?.phone || '',
         });
         setFiles(d?.files || []);
         setReady(true);
       })
       .catch(() => {
-        if (live) {
-          setValues({
-            ...defaults,
-            id: crypto.randomUUID(),
-            organizer_email: user?.email || '',
-            organizer_name: user?.name || '',
-            organizer_phone: user?.phone || '',
-          });
-          setError('storageError');
-          setReady(true);
-        }
+        if (!live) return;
+        setValues({ ...JSON.parse(serializedDefaults), id: crypto.randomUUID() });
+        setError('storageError');
+        setReady(true);
       });
     return () => {
       live = false;
     };
-  }, [user]);
+  }, [scope, serializedDefaults]);
   useEffect(() => {
     if (!ready) return;
-    let current = true;
-    writeDraft({ values, files })
+    let live = true;
+    writeDraft(scope, { values, files })
       .then(() => {
-        if (current) setSaved(true);
+        if (live) setSaved(true);
       })
       .catch(() => {
-        if (current) {
+        if (live) {
           setSaved(false);
           setError('storageError');
         }
       });
     return () => {
-      current = false;
+      live = false;
     };
-  }, [values, files, ready]);
+  }, [scope, values, files, ready]);
   function change(name: string, value: string) {
     setSaved(false);
     setValues((v) => ({ ...v, [name]: value }));
@@ -111,28 +95,18 @@ export function CreateCallForm({
           step={type === 'number' ? '0.01' : undefined}
           min={type === 'number' ? '0.01' : undefined}
           max={type === 'number' ? '1000000' : undefined}
-          readOnly={name === 'organizer_email' && !!user}
-          autoComplete={
-            name === 'organizer_email'
-              ? 'email'
-              : name === 'organizer_name'
-                ? 'name'
-                : name === 'organizer_phone'
-                  ? 'tel'
-                  : undefined
-          }
         />
       </label>
     );
   }
-  async function addFiles(newFiles: FileList | null) {
-    if (!newFiles) return;
-    const incoming = Array.from(newFiles);
+  async function addFiles(incomingList: FileList | null) {
+    if (!incomingList) return;
+    const incoming = Array.from(incomingList);
     if (
       files.length + incoming.length > 10 ||
       incoming.some(
         (f) =>
-          f.size === 0 ||
+          !f.size ||
           f.size > MAX_FILE_SIZE ||
           !f.name.toLowerCase().endsWith('.pdf') ||
           f.name.length > 200,
@@ -142,8 +116,7 @@ export function CreateCallForm({
       return;
     }
     for (const file of incoming) {
-      const header = await file.slice(0, 5).text();
-      if (header !== '%PDF-') {
+      if ((await file.slice(0, 5).text()) !== '%PDF-') {
         setError('fileError');
         return;
       }
@@ -158,7 +131,8 @@ export function CreateCallForm({
     setError('');
     setBusy(true);
     try {
-      const parsed = callSchema.safeParse(values);
+      const input = { ...values, ensemble_id: ensemble.id };
+      const parsed = callSchema.safeParse(input);
       if (!parsed.success) {
         setError('required');
         return;
@@ -169,33 +143,27 @@ export function CreateCallForm({
         setError('pastError');
         return;
       }
-      await writeDraft({ values, files });
-      if (!user) {
-        const result = await sendMagicLink(locale, values.organizer_email, `/${locale}/calls/new`);
-        if (result.error) setError(result.error);
-        else setSent(true);
+      await writeDraft(scope, { values, files });
+      const db = supabaseBrowser();
+      const existing = await db
+        .from('calls')
+        .select('id')
+        .eq('id', values.id)
+        .eq('organizer_id', user.id)
+        .eq('ensemble_id', ensemble.id)
+        .maybeSingle();
+      if (existing.data) {
+        setReady(false);
+        await clearDraft(scope).catch(() => undefined);
+        router.push(`/${locale}/calls/${values.id}?published=1`);
         return;
       }
-      const db = supabaseBrowser();
       const uploaded: {
         filename: string;
         storage_path: string;
         size: number;
         content_type: 'application/pdf';
       }[] = [];
-      // Check for an already published call after a lost response before uploading again.
-      const existing = await db
-        .from('calls')
-        .select('id')
-        .eq('id', values.id)
-        .eq('organizer_id', user.id)
-        .maybeSingle();
-      if (existing.data) {
-        setReady(false);
-        await clearDraft().catch(() => undefined);
-        router.push(`/${locale}/calls/${values.id}?published=1`);
-        return;
-      }
       for (const file of files) {
         const path = `${user.id}/${values.id}/${crypto.randomUUID()}.pdf`;
         const { error: uploadError } = await db.storage
@@ -214,14 +182,15 @@ export function CreateCallForm({
           content_type: 'application/pdf',
         });
       }
-      const result = await publishCall(values, uploaded);
+      const result = await publishCall(input, uploaded);
       if (result.error) {
-        await db.storage.from('call-pdfs').remove(uploaded.map((f) => f.storage_path));
+        if (uploaded.length)
+          await db.storage.from('call-pdfs').remove(uploaded.map((f) => f.storage_path));
         setError(result.error);
         return;
       }
       setReady(false);
-      await clearDraft().catch(() => undefined);
+      await clearDraft(scope).catch(() => undefined);
       router.push(`/${locale}/calls/${result.id}?published=1`);
     } catch {
       setError('genericError');
@@ -234,16 +203,15 @@ export function CreateCallForm({
     <form onSubmit={submit}>
       <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <section className="form-panel">
-          <h2>01 / {t.basics}</h2>
+          <h2>{t.basics}</h2>
           <div className="form-grid">
-            {field('ensemble_name', t.ensemble, 'text', true, 150)}
             <label className="field">
               {t.instrument} *
               <select
                 name="instrument"
-                required
                 value={values.instrument}
                 onChange={(e) => change('instrument', e.target.value)}
+                required
               >
                 <option value="">{t.chooseInstrument}</option>
                 {Object.entries(instruments).map(([id, names]) => (
@@ -257,62 +225,81 @@ export function CreateCallForm({
             {field('date', t.date, 'date', true)}
             {field('call_time', t.callTime, 'time', true)}
             {field('performance_time', t.performance, 'time')}
-            {field('venue', t.venue, 'text', true)}
-            {field('address', t.address, 'text', false, 300)}
+            <label className="field full">
+              {t.repertoire}
+              <small>{t.optional}</small>
+              <textarea
+                name="repertoire"
+                value={values.repertoire}
+                onChange={(e) => change('repertoire', e.target.value)}
+                maxLength={3000}
+              />
+            </label>
           </div>
           <p className="hint">{t.timezone}</p>
         </section>
         <section className="form-panel">
-          <h2>02 / {t.details}</h2>
-          <div className="form-grid">
-            <label className="field">
-              {t.compensation}
-              <select
-                name="compensation_type"
-                value={values.compensation_type}
-                onChange={(e) => change('compensation_type', e.target.value)}
-              >
-                <option value="negotiable">{t.negotiable}</option>
-                <option value="paid">{t.paid}</option>
-                <option value="unpaid">{t.unpaid}</option>
-              </select>
-            </label>
-            {values.compensation_type === 'paid' && (
-              <>
-                {field('compensation_amount', t.amount, 'number', true, 12)}
-                <label className="field">
-                  {t.currency}
-                  <select
-                    name="currency"
-                    value={values.currency}
-                    onChange={(e) => change('currency', e.target.value)}
-                  >
-                    {['DKK', 'EUR', 'SEK', 'NOK', 'GBP'].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
-                </label>
-              </>
-            )}
-            {[
-              ['repertoire', t.repertoire, 3000],
-              ['description', t.information, 5000],
-            ].map(([name, label, max]) => (
-              <label className="field full" key={String(name)}>
-                {label}
-                <small>{t.optional}</small>
-                <textarea
-                  name={String(name)}
-                  value={values[name] || ''}
-                  maxLength={Number(max)}
-                  onChange={(e) => change(String(name), e.target.value)}
-                />
-              </label>
-            ))}
+          <h2>{t.sharedDefaults}</h2>
+          <div className="saved-defaults">
+            <strong>{ensemble.name}</strong>
+            <span>{values.venue}</span>
+            {values.address && <span>{values.address}</span>}
+            <span>
+              {values.compensation_type === 'paid'
+                ? `${values.compensation_amount} ${values.currency}`
+                : t[values.compensation_type as 'unpaid' | 'negotiable']}
+            </span>
+            {values.description && <p className="prose">{values.description}</p>}
           </div>
+          <p className="hint">{t.savedDetails}</p>
+          <details className="call-overrides">
+            <summary>{t.changeCallDetails}</summary>
+            <p className="hint">{t.callOnlyChanges}</p>
+            <div className="form-grid" style={{ marginTop: 16 }}>
+              {field('venue', t.venue, 'text', true)}
+              {field('address', t.address, 'text', false, 300)}
+              <label className="field">
+                {t.compensation}
+                <select
+                  value={values.compensation_type}
+                  onChange={(e) => change('compensation_type', e.target.value)}
+                >
+                  <option value="negotiable">{t.negotiable}</option>
+                  <option value="unpaid">{t.unpaid}</option>
+                  <option value="paid">{t.paid}</option>
+                </select>
+              </label>
+              {values.compensation_type === 'paid' && (
+                <>
+                  {field('compensation_amount', t.amount, 'number', true, 12)}
+                  <label className="field">
+                    {t.currency}
+                    <select
+                      value={values.currency}
+                      onChange={(e) => change('currency', e.target.value)}
+                    >
+                      {['DKK', 'EUR', 'SEK', 'NOK', 'GBP'].map((c) => (
+                        <option key={c}>{c}</option>
+                      ))}
+                    </select>
+                  </label>
+                </>
+              )}
+            </div>
+            <label className="field" style={{ marginTop: 20 }}>
+              {t.information}
+              <small>{t.optional}</small>
+              <textarea
+                name="description"
+                value={values.description}
+                onChange={(e) => change('description', e.target.value)}
+                maxLength={5000}
+              />
+            </label>
+          </details>
         </section>
         <section className="form-panel">
-          <h2>03 / {t.attachments}</h2>
+          <h2>{t.attachments}</h2>
           <label className="field">
             {t.addFiles}
             <input
@@ -329,7 +316,7 @@ export function CreateCallForm({
               <div className="file-row" key={`${file.name}-${i}`}>
                 <span className="file-name">
                   <FileText />
-                  {file.name} <small>({(file.size / 1024 / 1024).toFixed(1)} MB)</small>
+                  {file.name}
                 </span>
                 <button
                   type="button"
@@ -337,7 +324,7 @@ export function CreateCallForm({
                   aria-label={`${t.remove} ${file.name}`}
                   onClick={() => {
                     setSaved(false);
-                    setFiles((f) => f.filter((_, index) => i !== index));
+                    setFiles((f) => f.filter((_, index) => index !== i));
                   }}
                 >
                   <X />
@@ -346,25 +333,14 @@ export function CreateCallForm({
             ))}
           </div>
         </section>
-        <section className="form-panel">
-          <h2>04 / {t.contact}</h2>
-          <div className="form-grid">
-            {field('organizer_name', t.name, 'text', true, 100)}
-            {field('organizer_email', t.email, 'email', true, 254)}
-            {field('organizer_phone', t.phone, 'tel', false, 40)}
-          </div>
-          <p className="hint">{t.privateContact}</p>
-        </section>
+        <p className="hint">
+          {t.postedBy} <strong>{user.name}</strong> · {user.email}
+          <br />
+          {t.teamContact}
+        </p>
         {error && (
           <div className="alert" role="alert">
             {t[error as keyof Dictionary] || t.genericError}
-          </div>
-        )}
-        {sent && (
-          <div className="alert success" role="status">
-            <strong>{t.checkEmail}</strong>
-            <br />
-            {t.checkEmailText}
           </div>
         )}
         <div className="submit-row">
@@ -372,7 +348,7 @@ export function CreateCallForm({
             {saved ? t.draftSaved : ''}
           </p>
           <button className="button" disabled={busy}>
-            {busy ? t.publishing : user ? t.publish : t.verifyPublish}
+            {busy ? t.publishing : t.publish}
             <ArrowRight />
           </button>
         </div>

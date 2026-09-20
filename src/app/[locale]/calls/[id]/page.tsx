@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
-import { getCall, getAttachments } from '@/lib/data';
+import { getCall, getAttachments, getEnsemble } from '@/lib/data';
 import { callStatus, dateLabel, timeLabel, feeLabel } from '@/lib/domain';
 import { currentUser } from '@/lib/supabase/server';
 import { ResponseForm } from '@/components/response-form';
@@ -35,7 +35,7 @@ export default async function Detail({
   ]);
   const t = dictionary(locale);
   const status = callStatus(call);
-  const own = user?.id === call.organizer_id;
+  const own = !!user && !!(await getEnsemble(call.ensemble_id));
   return (
     <div className="page">
       <Link className="back" href={`/${locale}`}>

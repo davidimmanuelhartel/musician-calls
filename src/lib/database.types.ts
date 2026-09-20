@@ -109,6 +109,7 @@ export type Database = {
           compensation_type: string
           currency: string | null
           description: string | null
+          ensemble_id: string
           ensemble_name: string
           event_at: string | null
           filled_at: string | null
@@ -130,6 +131,7 @@ export type Database = {
           compensation_type: string
           currency?: string | null
           description?: string | null
+          ensemble_id: string
           ensemble_name: string
           event_at?: string | null
           filled_at?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           compensation_type?: string
           currency?: string | null
           description?: string | null
+          ensemble_id?: string
           ensemble_name?: string
           event_at?: string | null
           filled_at?: string | null
@@ -163,6 +166,105 @@ export type Database = {
           repertoire?: string | null
           status?: string
           timezone?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calls_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ensemble_invites: {
+        Row: {
+          ensemble_id: string
+          expires_at: string
+          token_hash: string
+        }
+        Insert: {
+          ensemble_id: string
+          expires_at?: string
+          token_hash: string
+        }
+        Update: {
+          ensemble_id?: string
+          expires_at?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_invites_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: true
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ensemble_members: {
+        Row: {
+          ensemble_id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          ensemble_id: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          ensemble_id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_members_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ensembles: {
+        Row: {
+          address: string
+          compensation_amount: number | null
+          compensation_type: string
+          created_at: string
+          currency: string | null
+          description: string
+          id: string
+          name: string
+          owner_id: string
+          venue: string
+        }
+        Insert: {
+          address?: string
+          compensation_amount?: number | null
+          compensation_type?: string
+          created_at?: string
+          currency?: string | null
+          description?: string
+          id?: string
+          name: string
+          owner_id: string
+          venue: string
+        }
+        Update: {
+          address?: string
+          compensation_amount?: number | null
+          compensation_type?: string
+          created_at?: string
+          currency?: string | null
+          description?: string
+          id?: string
+          name?: string
+          owner_id?: string
           venue?: string
         }
         Relationships: []
@@ -252,7 +354,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_ensemble_invite: { Args: { ensemble: string }; Returns: string }
+      ensemble_roster: {
+        Args: { ensemble: string }
+        Returns: {
+          joined_at: string
+          name: string
+          user_id: string
+        }[]
+      }
+      is_ensemble_member: { Args: { ensemble: string }; Returns: boolean }
+      join_ensemble: {
+        Args: { member_name: string; member_phone?: string; token: string }
+        Returns: string
+      }
       publish_call: { Args: { files?: Json; payload: Json }; Returns: string }
+      remove_ensemble_member: {
+        Args: { ensemble: string; member: string }
+        Returns: undefined
+      }
+      save_ensemble: {
+        Args: { ensemble?: string; payload: Json }
+        Returns: string
+      }
       select_musician: {
         Args: { call_id: string; response_id: string }
         Returns: undefined
