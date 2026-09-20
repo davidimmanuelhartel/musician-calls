@@ -22,8 +22,8 @@ const numbered = (instrument: keyof typeof instruments, count: number) =>
   Array.from({ length: count }, (_, i) =>
     chair(
       instrument,
-      `${instruments[instrument][0]} ${i + 1}`,
-      `${instruments[instrument][1]} ${i + 1}`,
+      `${instruments[instrument][0]}${count > 1 ? ` ${i + 1}` : ''}`,
+      `${instruments[instrument][1]}${count > 1 ? ` ${i + 1}` : ''}`,
     ),
   );
 const strings = () => [
@@ -118,7 +118,16 @@ export function seatingTemplate(type: EnsembleType): Chair[] {
 }
 export function readSeating(value: unknown): Chair[] {
   const parsed = seatingSchema.safeParse(value);
-  return parsed.success ? parsed.data : [];
+  if (!parsed.success) return [];
+  // Correct untouched names from earlier templates, including already saved ensembles.
+  // Keep deliberate numbering when an ensemble has multiple chairs for an instrument.
+  return parsed.data.map((chair) => {
+    const names = instruments[chair.instrument as keyof typeof instruments];
+    const single = parsed.data.filter((c) => c.instrument === chair.instrument).length === 1;
+    return single && chair.en === `${names[0]} 1` && chair.da === `${names[1]} 1`
+      ? { ...chair, en: names[0], da: names[1] }
+      : chair;
+  });
 }
 export function chairLabel(chair: Chair, locale: Locale) {
   return chair[locale];

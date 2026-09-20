@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  readSeating,
   ensembleTypes,
   seatingTemplate,
   seatingSchema,
@@ -22,4 +23,21 @@ test('all ensemble templates contain valid bilingual chairs and the expected ins
     seatingSchema.safeParse([{ instrument: 'invented', en: 'Chair', da: 'Stemme' }]).success,
     false,
   );
+});
+
+test('single chairs are unnumbered; multiple chairs and custom names retain their names', () => {
+  const bigBand = seatingTemplate('big_band');
+  assert.equal(bigBand.find((c) => c.instrument === 'piano')?.en, 'Piano');
+  assert.equal(bigBand.find((c) => c.instrument === 'drums')?.da, 'Trommer');
+  assert.deepEqual(
+    bigBand.filter((c) => c.instrument === 'trombone').map((c) => c.en),
+    ['Trombone 1', 'Trombone 2', 'Trombone 3'],
+  );
+  const legacy = { instrument: 'piano', en: 'Piano 1', da: 'Klaver 1' };
+  assert.equal(readSeating([legacy])[0].da, 'Klaver');
+  assert.equal(
+    readSeating([legacy, { ...legacy, en: 'Piano 2', da: 'Klaver 2' }])[0].en,
+    'Piano 1',
+  );
+  assert.equal(readSeating([{ ...legacy, en: 'Solo piano' }])[0].en, 'Solo piano');
 });

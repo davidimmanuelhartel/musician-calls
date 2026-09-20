@@ -316,3 +316,43 @@ test('seating templates can be customized and reused for bilingual calls', async
     (await anon.from('calls').select('position').eq('id', callId).single()).data!.position,
   ).toBe('Lead alto');
 });
+
+test('browser review: all seating templates in English and Danish on desktop and mobile', async ({
+  page,
+}) => {
+  const owner = await account();
+  await signIn(page, owner.email, '/en/ensembles/new');
+  page.on('dialog', (dialog) => dialog.accept());
+  for (const locale of ['en', 'da']) {
+    await page.goto(`/${locale}/ensembles/new`);
+    for (const type of ['symphony', 'chamber', 'strings', 'wind', 'brass', 'big_band', 'custom']) {
+      await page
+        .getByRole('combobox', {
+          name: locale === 'en' ? 'Ensemble type' : 'Ensembletype',
+          exact: true,
+        })
+        .selectOption(type);
+      const inputs = page.locator('.chair-editor-row input');
+      const values = await inputs.evaluateAll((nodes) =>
+        nodes.map((node) => (node as HTMLInputElement).value),
+      );
+      expect(values.length > 0).toBe(type !== 'custom');
+      for (const label of values) {
+        if (label.endsWith(' 1')) expect(values).toContain(label.slice(0, -1) + '2');
+      }
+      expect(await page.locator('.chair-editor-row select').count()).toBe(0);
+      for (const width of [1280, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+          true,
+        );
+      }
+      if (type === 'big_band') {
+        await inputs.last().scrollIntoViewIfNeeded();
+        await page.screenshot({ path: `test-results/seating-${locale}-mobile.png` });
+        await page.setViewportSize({ width: 1280, height: 900 });
+        await page.screenshot({ path: `test-results/seating-${locale}-desktop.png` });
+      }
+    }
+  }
+});
