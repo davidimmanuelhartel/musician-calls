@@ -273,9 +273,9 @@ test('seating templates can be customized and reused for bilingual calls', async
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('combobox', { name: 'Ensemble type', exact: true }).selectOption('big_band');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await expect(page.getByLabel('Chair name (English)', { exact: true })).toHaveCount(17);
-  await page.getByLabel('Chair name (English)', { exact: true }).first().fill('Lead alto');
-  await page.getByLabel('Chair name (Danish)', { exact: true }).first().fill('Første altsaxofon');
+  await expect(page.getByLabel('Instrument / chair', { exact: true })).toHaveCount(17);
+  await page.getByLabel('Instrument / chair', { exact: true }).first().fill('Lead alto');
+  await expect(page.getByRole('combobox', { name: 'Instrument', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Remove chair 17', exact: true }).click();
   await page.getByRole('button', { name: 'Create an ensemble', exact: true }).click();
   await expect(page).toHaveURL(/\/en\/ensembles\/[a-f0-9-]+$/);
@@ -304,15 +304,15 @@ test('seating templates can be customized and reused for bilingual calls', async
   const callId = new URL(page.url()).pathname.split('/').pop()!;
   const call = (await anon.from('calls').select('*').eq('id', callId).single()).data!;
   expect(call.instrument).toBe('saxophone');
-  expect(call.position).toBe('Første altsaxofon');
+  expect(call.position).toBe('Lead alto');
   await page.goto(`/en/ensembles/${id}/edit`);
-  await expect(page.getByLabel('Chair name (English)', { exact: true }).first()).toHaveValue(
+  await expect(page.getByLabel('Instrument / chair', { exact: true }).first()).toHaveValue(
     'Lead alto',
   );
-  await page.getByLabel('Chair name (English)', { exact: true }).first().fill('New chair name');
+  await page.getByLabel('Instrument / chair', { exact: true }).first().fill('New chair name');
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/en/ensembles/${id}$`));
   expect(
     (await anon.from('calls').select('position').eq('id', callId).single()).data!.position,
-  ).toBe('Første altsaxofon');
+  ).toBe('Lead alto');
 });

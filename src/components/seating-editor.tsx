@@ -13,10 +13,24 @@ export function SeatingEditor({
   onChange: (type: EnsembleType, chairs: Chair[]) => void;
 }) {
   const t = dictionary(locale);
-  function update(index: number, key: keyof Chair, value: string) {
+  const suggestions = [
+    ...Object.keys(ensembleTypes).flatMap((key) => seatingTemplate(key as EnsembleType)),
+    ...Object.entries(instruments).map(([instrument, names]) => ({
+      instrument,
+      en: names[0],
+      da: names[1],
+    })),
+  ];
+  const labels = [...new Set(suggestions.map((chair) => chair[locale]))];
+  function update(index: number, value: string) {
+    const known = suggestions.find(
+      (chair) => chair[locale].toLowerCase() === value.trim().toLowerCase(),
+    );
     onChange(
       type,
-      chairs.map((chair, i) => (i === index ? { ...chair, [key]: value } : chair)),
+      chairs.map((chair, i) =>
+        i === index ? (known ? { ...known } : { ...chair, en: value, da: value }) : chair,
+      ),
     );
   }
   return (
@@ -51,37 +65,21 @@ export function SeatingEditor({
       >
         {t.applyTemplate}
       </button>
+      <datalist id="chair-suggestions">
+        {labels.map((label) => (
+          <option key={label} value={label} />
+        ))}
+      </datalist>
       {chairs.map((chair, index) => (
         <div className="chair-editor-row" key={index}>
           <label className="field">
-            {t.instrument}
-            <select
-              value={chair.instrument}
-              onChange={(e) => update(index, 'instrument', e.target.value)}
-            >
-              {Object.entries(instruments).map(([key, names]) => (
-                <option key={key} value={key}>
-                  {names[locale === 'da' ? 1 : 0]}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            {t.chairEnglish}
+            {t.chairName}
             <input
               required
               maxLength={100}
-              value={chair.en}
-              onChange={(e) => update(index, 'en', e.target.value)}
-            />
-          </label>
-          <label className="field">
-            {t.chairDanish}
-            <input
-              required
-              maxLength={100}
-              value={chair.da}
-              onChange={(e) => update(index, 'da', e.target.value)}
+              list="chair-suggestions"
+              value={chair[locale]}
+              onChange={(e) => update(index, e.target.value)}
             />
           </label>
           <button
