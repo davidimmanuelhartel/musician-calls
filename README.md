@@ -37,13 +37,13 @@ npx supabase migration up --local
 
 - `/{locale}/ensembles`: your private ensemble memberships.
 - `/{locale}/ensembles/new`: create an ensemble once with shared defaults.
-- `/{locale}/ensembles/{id}`: shared calls, response counts, saved details and members.
+- `/{locale}/ensembles/{id}`: shared calls, response counts, saved details, members and a private substitute directory.
 - `/{locale}/ensembles/{id}/edit`: owner-only editing of the saved details.
 - `/{locale}/join/{token}`: join the existing ensemble through a private invite and verified email sign-in.
 
-- `/en` and `/da`: upcoming open calls, soonest first.
+- `/en` and `/da`: landing page; no global call listing.
 - `/{locale}/calls/new?ensemble={id}`: member-only call form with saved ensemble details. Instrument, date and call time are the main required inputs; venue can be changed for this call; compensation and practical information are entered per call. Drafts and PDFs are saved separately per account and ensemble. Without an ensemble, this route redirects to your ensemble list.
-- `/{locale}/calls/{id}`: public detail, PDF links, available/maybe response form.
+- `/{locale}/calls/{id}`: private detail; members or personal invite holders only. Invited substitutes can open PDFs and respond without an account.
 - `/{locale}/dashboard`: compatibility redirect to your ensemble list.
 - `/{locale}/dashboard/{id}`: private responses and atomic selection, available to members of the call’s ensemble.
 - `/{locale}/login` and `/auth/confirm`: email magic-link authentication.
@@ -55,15 +55,15 @@ No profiles for musicians, automatic matching, chat, response notifications, pay
 
 ## Data and access
 
-Supabase Auth owns organizer identity. `organizer_profiles` stores default contact details. Calls contain public information; contact snapshots are in the separate private `call_contacts` table. Responses and call contact snapshots are readable only by current ensemble members. Ensemble pages and membership lists are private. Public calls retain snapshots of the ensemble name and call details; editing the ensemble does not change already published calls.
+Supabase Auth owns organizer identity. `organizer_profiles` stores default contact details. Calls are private to their ensemble and invited substitutes; contact snapshots are in the separate private `call_contacts` table. Responses and call contact snapshots are readable only by current ensemble members. Ensemble pages and membership lists are private. Calls retain snapshots of the ensemble name and call details; editing the ensemble does not change already published calls.
 
 Database migrations define row-level security, grants and these transactional functions:
 
 - `publish_call`: verified ensemble member only; derives the ensemble name and sender identity from trusted records and atomically creates the call, private contacts and attachment metadata.
-- `submit_response`: service-role only, reached through a validating Server Action. Serializes against selection, rejects closed calls and duplicate email responses, and limits accepted submissions to five per hashed IP per ten minutes.
+- `submit_response`: service-role only, reached through a validating Server Action. Serializes against selection, requires a valid invitation for a current listed substitute, rejects closed calls and duplicate substitute/email responses, and limits accepted submissions to five per hashed IP per ten minutes.
 - `select_musician`: current ensemble member only; locks the call, checks response membership and fills it with exactly one selection.
 
-PDFs upload directly to a private storage bucket before publication. Published files can be accessed by anyone with the call link via short-lived signed URLs. No musician login is required. Uploads are limited to 10 PDFs, 20 MB each. Unpublished uploads are private to their owner. For production, configure cleanup of abandoned unpublished objects; see [deployment notes](docs/DEPLOYMENT.md).
+PDFs upload directly to a private storage bucket before publication. Published files are streamed through a route that checks current membership or a personal invitation on every request. Bare call links give no access. No musician login is required. Uploads are limited to 10 PDFs, 20 MB each. Unpublished uploads are private to their owner. For production, configure cleanup of abandoned unpublished objects; see [deployment notes](docs/DEPLOYMENT.md).
 
 ## Ensemble access
 
@@ -99,3 +99,9 @@ Ensemble owners can select editable templates for symphony, chamber, string and 
 Ensemble setup stores a name, venue/address and instrumentation. Fees and practical notes are entered separately for each substitute call. Old published calls retain their snapshots.
 
 Venue/address autocomplete uses Photon/OpenStreetMap, restricted to Denmark for this POC. It searches after a 450ms pause, only for signed-in users, and allows manual editing in the same input. Selecting a result fills the formatted street, postcode, city and country when provided by the source; the selected venue and address appear together inside the input; changing the venue clears the previous address to avoid a mismatched pair. Search does not infer missing house numbers. Photon’s public demo endpoint permits moderate project usage but has no availability guarantee; use a hosted service or own instance before scaling: https://github.com/komoot/photon#demo-server.
+
+## Private substitute list
+
+All current ensemble members can add, edit or remove substitute contacts (name, instrument, phone; optional email). Each call shows contacts for its instrument only. Members can call a listed number or generate a personal invitation link and send it themselves; the app sends no messages. Tokens are stored as hashes. Replacing a link or editing/removing its contact revokes existing access. Invitations expire seven days after the event; responses stop when the call closes.
+
+Personal links are bearer credentials: someone who receives a forwarded link can use it. They do not verify the musician's identity. Responses use the listed name and phone, plus the saved email when present. Removing a contact preserves historical responses, but prevents selecting it for an open call. Earlier calls become private too; earlier unlisted responses remain historical records. Files already downloaded cannot be recalled.

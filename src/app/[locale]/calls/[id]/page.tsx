@@ -11,31 +11,30 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
-import { getCall, getAttachments, getEnsemble } from '@/lib/data';
+import { getSubstitutes } from '@/lib/data';
+import { callAccess, privateAttachments } from '@/lib/call-access';
+import { InviteSubstitutes } from '@/components/invite-substitutes';
 import { callStatus, dateLabel, timeLabel, feeLabel } from '@/lib/domain';
-import { currentUser } from '@/lib/supabase/server';
 import { ResponseForm } from '@/components/response-form';
-import { CopyLink } from '@/components/copy-link';
 export const dynamic = 'force-dynamic';
+export const metadata = { robots: { index: false, follow: false } };
 export default async function Detail({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string; id: string }>;
-  searchParams: Promise<{ published?: string }>;
+  searchParams: Promise<{ published?: string; invite?: string }>;
 }) {
   const { locale, id } = await params;
   if (!isLocale(locale)) notFound();
-  const call = await getCall(id);
-  if (!call) notFound();
-  const [attachments, user, query] = await Promise.all([
-    getAttachments(id),
-    currentUser(),
-    searchParams,
-  ]);
+  const query = await searchParams;
+  const access = await callAccess(id, query.invite);
+  if (!access) notFound();
+  const { call, member: own, recipient } = access;
+  const attachments = await privateAttachments(id, locale, own ? undefined : query.invite);
+  const substitutes = own ? await getSubstitutes(call.ensemble_id, call.instrument) : [];
   const t = dictionary(locale);
   const status = callStatus(call);
-  const own = !!user && !!(await getEnsemble(call.ensemble_id));
   return (
     <div className="page">
       <Link className="back" href={`/${locale}`}>
@@ -48,7 +47,6 @@ export default async function Detail({
             <strong>{t.published} ✓</strong>
             <p>{t.shareText}</p>
           </div>
-          <CopyLink locale={locale} path={`/${locale}/calls/${id}`} />
         </div>
       )}
       <div className="detail-layout">
@@ -142,7 +140,26 @@ export default async function Detail({
           )}
         </div>
         <div>
-          <ResponseForm locale={locale} callId={id} open={status === 'open'} />
+          {own ? (
+            status === 'open' ? (
+              <InviteSubstitutes
+                locale={locale}
+                callId={id}
+                ensembleId={call.ensemble_id}
+                substitutes={substitutes}
+              />
+            ) : (
+              <p>{t.closedText}</p>
+            )
+          ) : (
+            <ResponseForm
+              locale={locale}
+              callId={id}
+              open={status === 'open'}
+              inviteToken={query.invite!}
+              recipient={recipient!}
+            />
+          )}
         </div>
       </div>
     </div>

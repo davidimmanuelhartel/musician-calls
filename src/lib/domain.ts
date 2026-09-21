@@ -74,6 +74,7 @@ export type Attachment = {
   content_type: string;
 };
 export type MusicianResponse = {
+  substitute_id: string | null;
   id: string;
   call_id: string;
   name: string;

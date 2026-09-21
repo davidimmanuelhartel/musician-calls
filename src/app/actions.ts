@@ -74,7 +74,8 @@ export async function publishCall(input: unknown, files: unknown): Promise<Actio
   revalidatePath('/', 'layout');
   return { success: true, id: data };
 }
-export async function submitResponse(input: unknown): Promise<ActionResult> {
+export async function submitResponse(input: unknown, inviteToken?: string): Promise<ActionResult> {
+  if (!inviteToken || !/^[a-f0-9]{64}$/.test(inviteToken)) return { error: 'invalidInvitation' };
   const parsed = responseSchema.safeParse(input);
   if (!parsed.success) return { error: 'required' };
   if (!configured() || !process.env.RATE_LIMIT_SECRET || !process.env.SUPABASE_SERVICE_ROLE_KEY)
@@ -88,11 +89,15 @@ export async function submitResponse(input: unknown): Promise<ActionResult> {
     .update(ip?.trim() || 'local')
     .digest('hex');
   const db = supabaseAdmin();
-  const { error } = await db.rpc('submit_response', { payload: parsed.data, ip_hash: hash });
+  const { error } = await db.rpc('submit_response', {
+    payload: { ...parsed.data, invite_token: inviteToken },
+    ip_hash: hash,
+  });
   if (error)
     return {
-      error:
-        error.code === '23505'
+      error: error.message.includes('invalid_invitation')
+        ? 'invalidInvitation'
+        : error.code === '23505'
           ? 'duplicate'
           : error.message.includes('rate_limited')
             ? 'rateLimited'

@@ -15,9 +15,6 @@ export function Header({ locale }: { locale: Locale }) {
         tutti<span className="wordmark-dot">.</span>
       </Link>
       <div className="nav">
-        <Link className="nav-link browse-nav" href={`/${locale}#open-calls`}>
-          {t.openCalls}
-        </Link>
         <Link className="nav-link" href={`/${locale}/dashboard`}>
           {t.myEnsembles}
         </Link>

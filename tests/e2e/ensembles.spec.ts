@@ -103,7 +103,7 @@ test('private ensemble membership gates calls, responses, defaults, edits, and r
   const published = await member.db.rpc('publish_call', { payload: input });
   expect(published.error).toBeNull();
   const callId = published.data;
-  const call = (await anon.from('calls').select('*').eq('id', callId).single()).data!;
+  const call = (await admin.from('calls').select('*').eq('id', callId).single()).data!;
   expect(call.ensemble_name).toBe(payload.name);
   expect(call.venue).toBe(payload.venue);
   expect(call.compensation_amount).toBeNull();
@@ -122,14 +122,30 @@ test('private ensemble membership gates calls, responses, defaults, edits, and r
       })
     ).error,
   ).toBeNull();
-  const snapshot = (await anon.from('calls').select('*').eq('id', callId).single()).data!;
+  const snapshot = (await admin.from('calls').select('*').eq('id', callId).single()).data!;
   expect(snapshot.ensemble_name).toBe(payload.name);
   expect(snapshot.venue).toBe(payload.venue);
+  const sub = await owner.db.rpc('save_substitute', {
+    ensemble: id,
+    payload: {
+      id: crypto.randomUUID(),
+      name: 'Musician',
+      instrument: call.instrument,
+      phone: '+4512345678',
+    },
+  });
+  expect(sub.error).toBeNull();
+  const invitation = await owner.db.rpc('invite_substitute', {
+    call_id: callId,
+    substitute: sub.data,
+  });
+  expect(invitation.error).toBeNull();
   expect(
     (
       await admin.rpc('submit_response', {
         payload: {
           call_id: callId,
+          invite_token: invitation.data,
           name: 'Musician',
           email: `player-${crypto.randomUUID()}@example.com`,
           availability: 'available',
@@ -243,7 +259,7 @@ test('members join the existing private page and create simpler calls; drafts st
   await expect(mp.getByText('Call published', { exact: false }).first()).toBeVisible();
   const callId = new URL(mp.url()).pathname.split('/').pop()!;
   await page.reload();
-  await expect(page.getByText('Violin', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Violin', exact: true })).toBeVisible();
   await page.goto(`/en/dashboard/${callId}`);
   await expect(page.getByRole('heading', { name: 'Responses (0)', exact: true })).toBeVisible();
   await page.goto(`/en/calls/new?ensemble=${id}`);
@@ -304,7 +320,7 @@ test('seating templates can be customized and reused for bilingual calls', async
   await page.getByRole('button', { name: 'Publish call', exact: true }).click();
   await expect(page.getByText('Call published', { exact: false }).first()).toBeVisible();
   const callId = new URL(page.url()).pathname.split('/').pop()!;
-  const call = (await anon.from('calls').select('*').eq('id', callId).single()).data!;
+  const call = (await admin.from('calls').select('*').eq('id', callId).single()).data!;
   expect(call.instrument).toBe('saxophone');
   expect(call.position).toBe('Lead alto');
   await page.goto(`/en/ensembles/${id}/edit`);
@@ -315,7 +331,7 @@ test('seating templates can be customized and reused for bilingual calls', async
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/en/ensembles/${id}$`));
   expect(
-    (await anon.from('calls').select('position').eq('id', callId).single()).data!.position,
+    (await admin.from('calls').select('position').eq('id', callId).single()).data!.position,
   ).toBe('Lead alto');
 });
 
@@ -429,4 +445,41 @@ test('slim ensemble form links a real address result to its venue and keeps fees
     'negotiable',
   );
   await expect(page.getByLabel('Additional information')).toBeVisible();
+});
+
+test('removing a member revokes access to their committed PDFs without permitting deletion', async () => {
+  const owner = await account(),
+    member = await account();
+  const { id } = await createEnsemble(owner);
+  const invite = await owner.db.rpc('create_ensemble_invite', { ensemble: id });
+  expect(invite.error).toBeNull();
+  expect(
+    (await member.db.rpc('join_ensemble', { token: invite.data, member_name: 'Uploader' })).error,
+  ).toBeNull();
+  const payload = callPayload(id);
+  const path = `${member.id}/${payload.id}/score.pdf`;
+  const pdf = Buffer.from('%PDF-1.4\n%%EOF');
+  expect(
+    (
+      await member.db.storage
+        .from('call-pdfs')
+        .upload(path, pdf, { contentType: 'application/pdf' })
+    ).error,
+  ).toBeNull();
+  expect(
+    (
+      await member.db.rpc('publish_call', {
+        payload,
+        files: [{ filename: 'score.pdf', storage_path: path, size: pdf.length }],
+      })
+    ).error,
+  ).toBeNull();
+  expect((await member.db.storage.from('call-pdfs').download(path)).error).toBeNull();
+  expect((await anon.storage.from('call-pdfs').download(path)).error).not.toBeNull();
+  expect(
+    (await owner.db.rpc('remove_ensemble_member', { ensemble: id, member: member.id })).error,
+  ).toBeNull();
+  expect((await member.db.storage.from('call-pdfs').download(path)).error).not.toBeNull();
+  await member.db.storage.from('call-pdfs').remove([path]);
+  expect((await owner.db.storage.from('call-pdfs').download(path)).error).toBeNull();
 });

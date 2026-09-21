@@ -3,9 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
 import { currentUser } from '@/lib/supabase/server';
-import { getCall, getResponses, getEnsemble } from '@/lib/data';
+import { getCall, getResponses, getEnsemble, getSubstitutes } from '@/lib/data';
 import { callStatus } from '@/lib/domain';
-import { CopyLink } from '@/components/copy-link';
+import { InviteSubstitutes } from '@/components/invite-substitutes';
 import { SelectMusician } from '@/components/select-musician';
 export default async function Manage({
   params,
@@ -20,6 +20,7 @@ export default async function Manage({
   if (!call || !(await getEnsemble(call.ensemble_id))) notFound();
   const t = dictionary(locale);
   const responses = await getResponses([id]);
+  const substitutes = await getSubstitutes(call.ensemble_id, call.instrument);
   const status = callStatus(call);
   const groups = [
     { key: 'selected', label: t.selected, rows: responses.filter((r) => r.selected) },
@@ -49,7 +50,6 @@ export default async function Manage({
           <p>{call.ensemble_name}</p>
         </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <CopyLink locale={locale} path={`/${locale}/calls/${id}`} />
           <Link className="text-link" href={`/${locale}/calls/${id}`}>
             {t.publicPage}
             <ArrowUpRight />
@@ -57,6 +57,14 @@ export default async function Manage({
         </div>
       </div>
       {status === 'filled' && <div className="alert success">{t.selectedText}</div>}
+      {status === 'open' && (
+        <InviteSubstitutes
+          locale={locale}
+          callId={id}
+          ensembleId={call.ensemble_id}
+          substitutes={substitutes}
+        />
+      )}
       <h2 style={{ fontSize: 28 }}>
         {t.responses} ({responses.length})
       </h2>
@@ -64,7 +72,6 @@ export default async function Manage({
         <div className="empty">
           <h3>{t.noResponses}</h3>
           <p>{t.noResponsesText}</p>
-          <CopyLink locale={locale} path={`/${locale}/calls/${id}`} />
         </div>
       )}
       {groups
@@ -85,7 +92,7 @@ export default async function Manage({
                   {r.phone && <a href={`tel:${r.phone.replace(/[^+\d]/g, '')}`}>{r.phone}</a>}
                 </div>
                 {r.message && <blockquote>{r.message}</blockquote>}
-                {status === 'open' && (
+                {status === 'open' && r.substitute_id && (
                   <SelectMusician locale={locale} callId={id} responseId={r.id} name={r.name} />
                 )}
               </article>

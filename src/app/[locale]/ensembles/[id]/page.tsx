@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import { SubstituteDirectory } from '@/components/substitute-directory';
 import { readSeating, chairLabel, ensembleTypes, type EnsembleType } from '@/lib/seating';
 import { notFound, redirect } from 'next/navigation';
 import { Plus, ArrowUpRight, ArrowLeft, LockKeyhole } from 'lucide-react';
 import { dictionary, isLocale, instrumentName } from '@/lib/i18n';
 import { currentUser } from '@/lib/supabase/server';
-import { getEnsemble, ensembleCalls, getResponses, getRoster } from '@/lib/data';
+import { getEnsemble, ensembleCalls, getResponses, getRoster, getSubstitutes } from '@/lib/data';
 import { callStatus, dateLabel, timeLabel } from '@/lib/domain';
 import { InviteMembers, RemoveMember } from '@/components/ensemble-access';
 export const metadata = { robots: { index: false, follow: false } };
@@ -22,6 +23,7 @@ export default async function EnsemblePage({
   const t = dictionary(locale);
   const owner = ensemble.owner_id === user.id;
   const [calls, members] = await Promise.all([ensembleCalls(id), getRoster(id)]);
+  const substitutes = await getSubstitutes(id);
   const responses = await getResponses(calls.map((c) => c.id));
   return (
     <div className="page">
@@ -82,6 +84,9 @@ export default async function EnsemblePage({
               <p>{t.noEnsembleCallsText}</p>
             </div>
           )}
+          <div id="substitutes">
+            <SubstituteDirectory locale={locale} ensembleId={id} substitutes={substitutes} />
+          </div>
           <section className="form-panel" style={{ marginTop: 28 }}>
             <h2>
               {t.members} ({members.length})

@@ -1,14 +1,11 @@
-# Local validation — private ensembles, 20 September 2026
+# Validation — private calls and substitute lists, 21 September 2026
 
-- TypeScript, ESLint and the production build pass.
-- Eight focused tests pass, including required ensemble context and safe sign-in return paths.
-- Seven browser/database tests pass, covering ensemble ownership, private membership, joining through a reusable invite, invitation rotation/expiry, member removal, blocked nonmember publishing, shared defaults, and immutable published snapshots.
-- The browser verifies that an invited member reaches the same ensemble, creates a call without re-entering the name, contact or venue, and that another ensemble member can access its response management.
-- Drafts remain isolated across ensembles and survive EN/DA switching, including PDFs.
-- The full mobile flow passes: real local email login, ensemble setup, failed PDF upload and retry, anonymous musician response, selection and rejection of stale-page submissions after filling.
-- Existing duplicate-response, expiry, rate-limit and concurrent-selection checks pass.
-- English desktop and Danish mobile ensemble screenshots were inspected, including the mobile overflow check.
+The suite contains 10 unit tests and 12 browser/database tests. It covers private ensembles, member permissions, bilingual drafts, seating templates, address input, call creation, PDF upload recovery, personal invitations, musician responses and atomic selection.
 
-The migration was applied to the existing local database without resetting it. It groups previous calls by creator and ensemble name and preserves their public snapshots and original ownership. Test cleanup targets synthetic fixture accounts, not other local data.
+Privacy regressions cover anonymous and cross-ensemble access, instrument matching, token rotation and expiry, contact edits/removal, forged response identity, duplicate responses, rate limits and stale submissions. Removing an ensemble member blocks access to their committed PDFs and does not let them delete those files. Removing a substitute revokes their call and PDF invitation access while preserving response history.
 
-Hosted deployment, external SMTP, human Danish copy review and real-world usability sessions remain unvalidated. The app has not been deployed to production.
+The migrations upgrade existing records without resetting the database. Existing calls become private. Test cleanup targets synthetic fixture accounts only.
+
+Browser checks include the English mobile substitute directory and invitation controls, the Danish invited response flow, desktop/mobile layouts and overflow. Hosted verification uses a temporary synthetic account and an admin-generated login link; it does not test email delivery.
+
+Custom SMTP for external users, human Danish copy review and real-world usability sessions remain outstanding. Personal invitation links are bearer credentials, not proof of the recipient's identity.

@@ -7,10 +7,14 @@ export function ResponseForm({
   locale,
   callId,
   open,
+  inviteToken,
+  recipient,
 }: {
   locale: Locale;
   callId: string;
   open: boolean;
+  inviteToken: string;
+  recipient: { name: string; email: string; phone: string };
 }) {
   const t = dictionary(locale);
   const [choice, setChoice] = useState<'available' | 'maybe' | null>(null);
@@ -52,11 +56,14 @@ export function ResponseForm({
             setBusy(true);
             setError('');
             try {
-              const result = await submitResponse({
-                ...values,
-                call_id: callId,
-                availability: choice,
-              });
+              const result = await submitResponse(
+                {
+                  ...values,
+                  call_id: callId,
+                  availability: choice,
+                },
+                inviteToken,
+              );
               if (result.error) setError(result.error);
               else setDone(true);
             } catch {
@@ -83,17 +90,40 @@ export function ResponseForm({
               ))}
             </div>
             <label className="field">
-              {t.name} *<input name="name" autoComplete="name" required maxLength={100} autoFocus />
+              {t.name} *
+              <input
+                name="name"
+                autoComplete="name"
+                required
+                maxLength={100}
+                readOnly
+                value={recipient.name}
+              />
             </label>
             <label className="field">
               {t.email} *
-              <input name="email" type="email" autoComplete="email" required maxLength={254} />
+              <input
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                maxLength={254}
+                defaultValue={recipient.email}
+                readOnly={!!recipient.email}
+              />
             </label>
             <label className="field">
               <span className="field-label">
                 {t.phone} <small>{t.optional}</small>
               </span>
-              <input name="phone" type="tel" autoComplete="tel" maxLength={40} />
+              <input
+                name="phone"
+                type="tel"
+                autoComplete="tel"
+                maxLength={40}
+                readOnly
+                value={recipient.phone}
+              />
             </label>
             <label className="field">
               <span className="field-label">

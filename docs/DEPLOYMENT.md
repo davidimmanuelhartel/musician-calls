@@ -5,7 +5,7 @@ The POC is hosted at https://musician-calls.vercel.app.
 - Vercel project: https://vercel.com/davidimmanuelhartels-projects/musician-calls
 - Supabase project: https://supabase.com/dashboard/project/etwqitrdbmnkumqyvntg (personal organization, Stockholm / eu-north-1).
 - GitHub `main` is connected to Vercel for automatic deployment.
-- All four database migrations are applied. Production credentials are configured in Vercel; local development continues using the separate Docker database.
+- Database migrations through `20260921000200_private_file_access.sql` are applied. Production credentials are configured in Vercel; local development continues using the separate Docker database.
 - Hosted Auth callbacks are configured for the production origin. Custom SMTP is still required for sign-in emails to users outside the Supabase project team. The free default sender also rejects custom email templates, so hosted emails retain Supabase defaults until SMTP is configured. The callback supports both standard PKCE links and custom token-hash links.
 
 The following steps document setup for another environment:
@@ -25,10 +25,10 @@ The following steps document setup for another environment:
 - Supabase's built-in Auth limits control magic-link requests. The application does not send response or selection emails.
 - Configure periodic deletion through the Storage API for objects older than 24 hours in `call-pdfs` that are not referenced by `public.attachments`. Never delete storage metadata directly. Failed and abandoned browser uploads may otherwise accumulate. Completed-call retention should be agreed with the pilot organizers.
 - Run `delete from public.response_rate_limits where created_at < now() - interval '1 hour'` periodically so the final rate-limit records are also removed when the app is idle.
-- Published attachments are intentionally accessible through public calls. The bucket itself stays private. Signed download links last one hour; reload the call to obtain a fresh link.
+- Calls and attachments are private. Downloads check membership or the personal invitation on every request. Older signed URLs issued before the privacy migration can remain valid for up to one hour; previously downloaded files cannot be recalled.
 - No manual closing/reopening or call editing is included. The optional close endpoint was deferred because the agreed call status model has no cancelled state. Selection is the supported closure path.
 - Draft recovery uses browser storage and therefore does not transfer across devices, browser profiles, or origins. Clearing site data removes the draft.
-- If hosting without configured Supabase, the homepage shows a translated service-unavailable message rather than fake calls.
+- The homepage contains no database-backed global call listing.
 
 ## Implementation references
 

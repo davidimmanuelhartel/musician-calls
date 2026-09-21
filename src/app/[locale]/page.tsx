@@ -1,17 +1,13 @@
 import Link from 'next/link';
-import { ArrowRight, Music2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { dictionary, isLocale } from '@/lib/i18n';
-import { openCalls } from '@/lib/data';
-import { configured } from '@/lib/supabase/server';
-import { CallCard } from '@/components/call-card';
 import { EnsembleArt } from '@/components/ensemble-art';
 export const dynamic = 'force-dynamic';
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = dictionary(locale);
-  const calls = await openCalls();
   return (
     <>
       <section className="hero">
@@ -28,12 +24,8 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               {t.findSub}
               <ArrowRight />
             </Link>
-            <a className="text-link" href="#open-calls">
-              {t.browse}
-              <ArrowRight />
-            </a>
           </div>
-          <p className="hero-note">{t.noAccount}</p>
+          <p className="hero-note">{t.privateCallsNote}</p>
         </div>
         <EnsembleArt locale={locale} />
       </section>
@@ -51,36 +43,6 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             </div>
           </div>
         ))}
-      </section>
-      <section id="open-calls">
-        <div className="section-head">
-          <div>
-            <p className="eyebrow">
-              {t.upcoming} / {t.openCalls} ({calls.length})
-            </p>
-            <h2>{t.openIntro}</h2>
-          </div>
-          <p className="small-copy">{t.openText}</p>
-        </div>
-        {!configured() ? (
-          <div className="alert">{t.configuration}</div>
-        ) : calls.length ? (
-          <div className="cards">
-            {calls.map((call) => (
-              <CallCard key={call.id} call={call} locale={locale} />
-            ))}
-          </div>
-        ) : (
-          <div className="empty">
-            <Music2 size={30} />
-            <h3>{t.noCalls}</h3>
-            <p>{t.noCallsText}</p>
-            <Link className="button secondary" href={`/${locale}/ensembles`}>
-              {t.findSub}
-              <ArrowRight />
-            </Link>
-          </div>
-        )}
       </section>
     </>
   );

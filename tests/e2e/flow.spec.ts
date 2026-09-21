@@ -30,6 +30,7 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   page,
   browser,
 }) => {
+  test.setTimeout(120000);
   await page.setViewportSize({ width: 390, height: 844 });
   const suffix = crypto.randomUUID().slice(0, 8);
   const organizer = `organizer-${suffix}@example.com`;
@@ -47,7 +48,17 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await expect(
     page.getByRole('heading', { name: `Test Orchestra ${suffix}`, exact: true }),
   ).toBeVisible();
+  const ensembleUrl = page.url();
+  await page.getByRole('button', { name: 'Add substitute', exact: true }).click();
+  const directoryForm = page.locator('.substitute-form');
+  await directoryForm.getByLabel('Name').fill('David Musician');
+  await directoryForm.getByLabel('Instrument').selectOption('trombone');
+  await directoryForm.getByRole('textbox', { name: 'Phone *', exact: true }).fill('+4512345678');
+  await directoryForm.getByRole('button', { name: 'Save changes' }).click();
+  await expect(page.locator('.substitute-row').getByText('David Musician')).toBeVisible();
+  await page.locator('#substitutes').screenshot({ path: 'test-results/substitutes-mobile.png' });
   await page.getByRole('link', { name: 'Find a substitute', exact: true }).last().click();
+  await expect(page).toHaveURL(/\/en\/calls\/new\?ensemble=/);
   await expect(page.getByLabel('Ensemble name')).toHaveCount(0);
   await expect(page.getByLabel('Your name')).toHaveCount(0);
   await page.getByLabel('Instrument', { exact: false }).selectOption('trombone');
@@ -56,7 +67,10 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await page.getByRole('textbox', { name: 'Time *', exact: true }).fill('16:30');
   await page.getByLabel('Performance time').fill('19:30');
   await expect(page.getByLabel('Repertoire')).toHaveCount(0);
-  await page.locator('.form-panel').first().screenshot({ path: 'test-results/call-essentials.png' });
+  await page
+    .locator('.form-panel')
+    .first()
+    .screenshot({ path: 'test-results/call-essentials.png' });
   await page.getByRole('combobox', { name: 'Compensation', exact: true }).selectOption('paid');
   await page.getByLabel('Amount').fill('800');
 
@@ -69,6 +83,9 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await expect(page.getByText('Beethoven5.pdf', { exact: false }).first()).toBeVisible();
   await page.getByRole('link', { name: 'EN', exact: true }).click();
   await expect(page.getByLabel('Position / chair')).toHaveValue('2nd Trombone');
+  await expect(page.getByRole('combobox', { name: 'Instrument *', exact: true })).toHaveValue(
+    'trombone',
+  );
   await page.route('**/storage/v1/object/call-pdfs/**', (route) =>
     route.fulfill({
       status: 503,
@@ -87,22 +104,32 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await expect(page.getByText('800 DKK', { exact: true })).toBeVisible();
   const musician = await browser.newContext({ viewport: { width: 390, height: 844 } });
   const mp = await musician.newPage();
-  await mp.goto(`${process.env.APP_URL}/da/calls/${callId}`);
+  expect((await mp.goto(`${process.env.APP_URL}/da/calls/${callId}`))!.status()).toBe(404);
+  await page.getByRole('button', { name: 'Create invitation link', exact: true }).click();
+  const invitationInput = page.locator('.invitation-link input');
+  await expect(invitationInput).toBeVisible();
+  await page.locator('.invitation-link').screenshot({ path: 'test-results/invitation-mobile.png' });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+  const invitationUrl = (await invitationInput.inputValue()).replace('/en/calls/', '/da/calls/');
+  await mp.goto(invitationUrl);
   await expect(mp.locator('html')).toHaveAttribute('lang', 'da');
   const link = mp.getByRole('link', { name: 'Beethoven5.pdf' });
-  const pdfResult = await mp.request.get((await link.getAttribute('href'))!);
+  const pdfUrl = (await link.getAttribute('href'))!;
+  expect((await mp.request.get(pdfUrl.split('?')[0])).status()).toBe(404);
+  const pdfResult = await mp.request.get(pdfUrl);
   expect(pdfResult.status()).toBe(200);
   expect((await pdfResult.body()).subarray(0, 5).toString()).toBe('%PDF-');
   await mp.getByRole('button', { name: 'Jeg kan spille', exact: true }).click();
-  await mp.getByLabel('Dit navn').fill('David Musician');
+  await expect(mp.getByLabel('Dit navn')).toHaveValue('David Musician');
   await mp.getByLabel('E-mail').fill(`musician-${suffix}@example.com`);
   await mp.getByLabel('Besked').fill('I can arrive at 16:15.');
   await mp.getByRole('button', { name: 'Send svar', exact: true }).click();
   await expect(mp.getByText('Tak, fordi du vil spille med.')).toBeVisible();
   const stale = await musician.newPage();
-  await stale.goto(`${process.env.APP_URL}/da/calls/${callId}`);
+  await stale.goto(invitationUrl);
   await stale.getByRole('button', { name: 'Jeg kan spille', exact: true }).click();
-  await stale.getByLabel('Dit navn').fill('Late musician');
   await stale.getByLabel('E-mail').fill(`late-${suffix}@example.com`);
   await page.goto(`/en/dashboard/${callId}`);
   await expect(page.getByRole('heading', { name: 'David Musician', exact: true })).toBeVisible();
@@ -119,6 +146,15 @@ test('mobile: bilingual draft, PDF, verified publish, anonymous response, select
   await mp.goto(`${process.env.APP_URL}/en`);
   await expect(mp.getByText(`Test Orchestra ${suffix}`, { exact: true })).toHaveCount(0);
   await page.screenshot({ path: 'test-results/dashboard-mobile.png', fullPage: true });
+  await page.goto(ensembleUrl);
+  page.once('dialog', (dialog) => dialog.accept());
+  await page
+    .locator('.substitute-row')
+    .getByRole('button', { name: 'Remove', exact: true })
+    .click();
+  await expect(page.locator('.substitute-row')).toHaveCount(0);
+  expect((await mp.request.get(pdfUrl)).status()).toBe(404);
+  expect((await mp.goto(invitationUrl))!.status()).toBe(404);
   await musician.close();
 });
 

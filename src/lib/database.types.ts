@@ -101,6 +101,45 @@ export type Database = {
           },
         ]
       }
+      call_invitations: {
+        Row: {
+          call_id: string
+          created_at: string
+          expires_at: string
+          substitute_id: string
+          token_hash: string
+        }
+        Insert: {
+          call_id: string
+          created_at?: string
+          expires_at: string
+          substitute_id: string
+          token_hash: string
+        }
+        Update: {
+          call_id?: string
+          created_at?: string
+          expires_at?: string
+          substitute_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_invitations_call_id_fkey"
+            columns: ["call_id"]
+            isOneToOne: false
+            referencedRelation: "calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "call_invitations_substitute_id_fkey"
+            columns: ["substitute_id"]
+            isOneToOne: false
+            referencedRelation: "ensemble_substitutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calls: {
         Row: {
           address: string | null
@@ -230,6 +269,44 @@ export type Database = {
           },
         ]
       }
+      ensemble_substitutes: {
+        Row: {
+          created_at: string
+          email: string | null
+          ensemble_id: string
+          id: string
+          instrument: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          ensemble_id: string
+          id?: string
+          instrument: string
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          ensemble_id?: string
+          id?: string
+          instrument?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_substitutes_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ensembles: {
         Row: {
           address: string
@@ -322,6 +399,7 @@ export type Database = {
           name: string
           phone: string | null
           selected: boolean
+          substitute_id: string | null
         }
         Insert: {
           availability: string
@@ -333,6 +411,7 @@ export type Database = {
           name: string
           phone?: string | null
           selected?: boolean
+          substitute_id?: string | null
         }
         Update: {
           availability?: string
@@ -344,6 +423,7 @@ export type Database = {
           name?: string
           phone?: string | null
           selected?: boolean
+          substitute_id?: string | null
         }
         Relationships: [
           {
@@ -353,6 +433,13 @@ export type Database = {
             referencedRelation: "calls"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "responses_substitute_id_fkey"
+            columns: ["substitute_id"]
+            isOneToOne: false
+            referencedRelation: "ensemble_substitutes"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
@@ -360,6 +447,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_delete_staged_pdf: { Args: { path: string }; Returns: boolean }
+      can_read_call_pdf: { Args: { path: string }; Returns: boolean }
       create_ensemble_invite: { Args: { ensemble: string }; Returns: string }
       ensemble_roster: {
         Args: { ensemble: string }
@@ -368,6 +457,10 @@ export type Database = {
           name: string
           user_id: string
         }[]
+      }
+      invite_substitute: {
+        Args: { call_id: string; substitute: string }
+        Returns: string
       }
       is_ensemble_member: { Args: { ensemble: string }; Returns: boolean }
       join_ensemble: {
@@ -379,8 +472,16 @@ export type Database = {
         Args: { ensemble: string; member: string }
         Returns: undefined
       }
+      remove_substitute: {
+        Args: { ensemble: string; substitute: string }
+        Returns: undefined
+      }
       save_ensemble: {
         Args: { ensemble?: string; payload: Json }
+        Returns: string
+      }
+      save_substitute: {
+        Args: { ensemble: string; payload: Json }
         Returns: string
       }
       select_musician: {

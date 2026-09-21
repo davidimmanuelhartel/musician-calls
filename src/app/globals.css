@@ -1173,3 +1173,35 @@ dialog p {
   color: var(--muted);
   font-size: 10px;
 }
+
+.substitute-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.substitute-row > div {
+  min-width: 0;
+}
+.substitute-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.substitute-form {
+  margin-top: 20px;
+}
+.invitation-link {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 100%;
+}
+.invitation-link input {
+  width: 100%;
+  min-width: 0;
+}

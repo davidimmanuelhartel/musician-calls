@@ -2,13 +2,13 @@
 
 ## Goal
 
-Validate whether a structured, shareable substitute call helps an organizer fill a last-minute vacancy. The core acceptance scenario is the supplied trombone call in Frederiksberg, with Beethoven sheet music, a private musician response, organizer selection and a public filled state.
+Validate whether a structured, shareable substitute call helps an organizer fill a last-minute vacancy. The core acceptance scenario is the supplied trombone call in Frederiksberg, with Beethoven sheet music, a private musician response, organizer selection and a private filled state.
 
 ## Agreed scope
 
 New repository; Next.js App Router, TypeScript, Tailwind and Supabase; mobile-first web interface in English and Danish. Language-prefixed routes and a visible toggle. Denmark-focused pilot, DKK default, Europe/Copenhagen timestamps.
 
-Public pages include upcoming open calls and individual calls, including filled or expired calls when accessed by their existing link. There is no geographic search or automatic distribution. Organizers share links themselves.
+The homepage has no call listing. Calls are visible only to ensemble members and holders of a personal invitation issued to a listed substitute for that instrument. Members share invitations themselves; no automatic distribution. Each ensemble maintains its own private contact list.
 
 ## Private ensembles and publication
 
@@ -32,7 +32,7 @@ A repeated email cannot add or overwrite a response to the same call. There is n
 
 ## Attachments
 
-PDF only; up to 10 files, 20 MB per file. PDF metadata and storage existence are checked before publication. Anyone with the public call link can obtain a temporary download URL. Failed uploads must leave the call unpublished and the draft available for retry. Abandoned uploads require storage cleanup before a broader pilot.
+PDF only; up to 10 files, 20 MB per file. PDF metadata and storage existence are checked before publication. Members and personal invitation holders can download through an access-checked route; bare links do not grant access. Failed uploads must leave the call unpublished and the draft available for retry. Abandoned uploads require storage cleanup before a broader pilot.
 
 ## Expiration
 

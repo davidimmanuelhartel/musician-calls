@@ -4,6 +4,28 @@ export function isLocale(value: string): value is Locale {
   return value === 'en' || value === 'da';
 }
 export const en = {
+  substitutes: 'Substitutes',
+  addSubstitute: 'Add substitute',
+  substituteName: 'Name',
+  allInstruments: 'All instruments',
+  editSubstitute: 'Edit',
+  removeSubstitute: 'Remove',
+  removeSubstituteConfirm: 'Remove this substitute? Their invitation links will stop working.',
+  noSubstitutes: 'No substitutes in this list yet.',
+  contactSubstitutes: 'Contact substitutes',
+  privateInviteHint:
+    'Choose a listed musician. Copy their personal link and send it yourself. Anyone with that link can open the call.',
+  noMatchingSubstitutes: 'Add a substitute for this instrument to your ensemble list first.',
+  invitationFor: 'Invitation for',
+  createInvitation: 'Create invitation link',
+  replaceInvitation: 'Replace invitation link',
+  manageSubstitutes: 'Manage substitute list',
+  inviteFailed:
+    'Could not create an invitation. Check that the call is open and the musician is still on the list.',
+  privateCallsNote: 'Calls are private to your ensemble and invited substitutes.',
+  invalidInvitation:
+    'This invitation is invalid or has expired. Contact the ensemble for a new link.',
+
   callDetails: 'Details for this call',
   venueSearch: 'Search for a venue or street address',
   venueHint: 'Choose a result to fill the address automatically.',
@@ -80,7 +102,7 @@ export const en = {
   memberRemoved: 'Member removed. Create a new invite link when you next invite someone.',
   createEnsembleFirst: 'Choose your ensemble before publishing a call.',
   privatePageNote:
-    'Only members can see this page. Published calls and their attachments are public.',
+    'Only members can see this page. Calls are shared privately with listed substitutes.',
   contactOnce: 'Your name is saved for future calls.',
   returnEnsembles: 'Back to my ensembles',
   saveChanges: 'Save changes',
@@ -96,8 +118,8 @@ export const en = {
   how: 'A missing player. A simple solution.',
   step1: 'Post your call',
   step1text: 'Open your ensemble and add the part and the date.',
-  step2: 'Share with your network',
-  step2text: 'Send one link to the musicians you know.',
+  step2: 'Contact your substitutes',
+  step2text: 'Invite musicians from your ensemble’s private list.',
   step3: 'Find your substitute',
   step3text: 'See who’s available and choose your musician.',
   upcoming: 'UP NEXT',
@@ -126,9 +148,9 @@ export const en = {
   compensation: 'Compensation',
   amount: 'Amount',
   currency: 'Currency',
-  back: 'Back to open calls',
+  back: 'Home',
   newTitle: 'Make room for the music.',
-  newIntro: 'Tell musicians what you need. Publish a call and share the link with your network.',
+  newIntro: 'Tell musicians what you need, then invite substitutes from your ensemble’s list.',
   basics: 'The essentials',
   details: 'The finer details',
   contact: 'Your contact details',
@@ -143,7 +165,7 @@ export const en = {
   message: 'Message',
   optional: 'optional',
   pdfHint:
-    'PDF only · up to 10 files · 20 MB per file. Anyone with the call link can open these documents.',
+    'PDF only · up to 10 files · 20 MB per file. Only ensemble members and invited substitutes can open these documents.',
   addFiles: 'Add PDFs',
   remove: 'Remove',
   publish: 'Publish call',
@@ -155,7 +177,7 @@ export const en = {
   published: 'Call published',
   copy: 'Copy link',
   copied: 'Link copied',
-  shareText: 'Share this link with your musician network.',
+  shareText: 'Invite a musician from your ensemble’s substitute list.',
   respondTitle: 'Put your name forward.',
   respondIntro:
     'Your details go privately to the ensemble’s members, who can contact you to confirm arrangements.',
@@ -181,7 +203,7 @@ export const en = {
   responses: 'Responses',
   viewResponses: 'View responses',
   noResponses: 'No responses yet.',
-  noResponsesText: 'Share your call link to get it in front of musicians.',
+  noResponsesText: 'Invite a musician from the list below.',
   select: 'Select musician',
   confirmTitle: 'Select this musician?',
   confirmText:
@@ -189,7 +211,7 @@ export const en = {
   confirm: 'Confirm selection',
   cancel: 'Cancel',
   selectedText: 'Contact your selected musician to confirm the arrangements.',
-  publicPage: 'View public call',
+  publicPage: 'View call',
   signOut: 'Sign out',
   footer: 'Good music starts with people.',
   footerNote: 'For orchestras, big bands & ensembles.',
@@ -220,6 +242,28 @@ export const en = {
 };
 export type Dictionary = { [K in keyof typeof en]: string };
 export const da: Dictionary = {
+  substitutes: 'Vikarer',
+  addSubstitute: 'Tilføj vikar',
+  substituteName: 'Navn',
+  allInstruments: 'Alle instrumenter',
+  editSubstitute: 'Rediger',
+  removeSubstitute: 'Fjern',
+  removeSubstituteConfirm: 'Vil du fjerne vikaren? Invitationslinks vil ikke længere virke.',
+  noSubstitutes: 'Der er endnu ingen vikarer på listen.',
+  contactSubstitutes: 'Kontakt vikarer',
+  privateInviteHint:
+    'Vælg en musiker fra listen. Kopiér det personlige link, og send det selv. Alle med linket kan åbne opslaget.',
+  noMatchingSubstitutes: 'Tilføj først en vikar til dette instrument på ensemblets liste.',
+  invitationFor: 'Invitation til',
+  createInvitation: 'Opret invitationslink',
+  replaceInvitation: 'Erstat invitationslink',
+  manageSubstitutes: 'Administrer vikarliste',
+  inviteFailed:
+    'Invitationen kunne ikke oprettes. Tjek, at opslaget er åbent, og at musikeren stadig er på listen.',
+  privateCallsNote: 'Opslag er private for ensemblet og inviterede vikarer.',
+  invalidInvitation:
+    'Invitationen er ugyldig eller udløbet. Kontakt ensemblet for at få et nyt link.',
+
   callDetails: 'Oplysninger om dette opslag',
   venueSearch: 'Søg efter spillested eller adresse',
   venueHint: 'Vælg et resultat for automatisk at udfylde adressen.',
@@ -298,8 +342,7 @@ export const da: Dictionary = {
   memberRemoved:
     'Medlemmet er fjernet. Opret et nyt invitationslink, næste gang du inviterer nogen.',
   createEnsembleFirst: 'Vælg dit ensemble, før du opretter et opslag.',
-  privatePageNote:
-    'Kun medlemmer kan se denne side. Offentliggjorte opslag og deres bilag er offentlige.',
+  privatePageNote: 'Kun medlemmer kan se denne side. Opslag deles privat med vikarer fra listen.',
   contactOnce: 'Dit navn gemmes til fremtidige opslag.',
   returnEnsembles: 'Tilbage til mine ensembler',
   saveChanges: 'Gem ændringer',
@@ -315,8 +358,8 @@ export const da: Dictionary = {
   how: 'En ledig stol. En enkel løsning.',
   step1: 'Opret dit opslag',
   step1text: 'Åbn dit ensemble, og tilføj stemmen og datoen.',
-  step2: 'Del med dit netværk',
-  step2text: 'Send ét link til de musikere, du kender.',
+  step2: 'Kontakt jeres vikarer',
+  step2text: 'Inviter musikere fra ensemblets private vikarliste.',
   step3: 'Find din vikar',
   step3text: 'Se, hvem der kan, og vælg din musiker.',
   upcoming: 'DET SKER SNART',
@@ -346,9 +389,9 @@ export const da: Dictionary = {
   compensation: 'Honorar',
   amount: 'Beløb',
   currency: 'Valuta',
-  back: 'Tilbage til åbne opslag',
+  back: 'Forside',
   newTitle: 'Giv plads til musikken.',
-  newIntro: 'Fortæl musikerne, hvad du mangler. Opret et opslag, og del linket med dit netværk.',
+  newIntro: 'Fortæl musikerne, hvad du mangler, og inviter vikarer fra ensemblets liste.',
   basics: 'Det vigtigste',
   details: 'De nærmere detaljer',
   contact: 'Dine kontaktoplysninger',
@@ -363,7 +406,7 @@ export const da: Dictionary = {
   message: 'Besked',
   optional: 'valgfrit',
   pdfHint:
-    'Kun PDF · højst 10 filer · 20 MB pr. fil. Alle med linket til opslaget kan åbne dokumenterne.',
+    'Kun PDF · højst 10 filer · 20 MB pr. fil. Kun ensemblemedlemmer og inviterede vikarer kan åbne dokumenterne.',
   addFiles: 'Tilføj PDF-filer',
   remove: 'Fjern',
   publish: 'Offentliggør opslag',
@@ -375,7 +418,7 @@ export const da: Dictionary = {
   published: 'Opslaget er offentliggjort',
   copy: 'Kopiér link',
   copied: 'Link kopieret',
-  shareText: 'Del dette link med dit musikernetværk.',
+  shareText: 'Inviter en musiker fra ensemblets vikarliste.',
   respondTitle: 'Meld dig på banen.',
   respondIntro:
     'Dine oplysninger sendes privat til ensemblets medlemmer, som kan kontakte dig for at bekræfte aftalen.',
@@ -401,7 +444,7 @@ export const da: Dictionary = {
   responses: 'Svar',
   viewResponses: 'Se svar',
   noResponses: 'Ingen svar endnu.',
-  noResponsesText: 'Del linket til dit opslag, så musikerne ser det.',
+  noResponsesText: 'Inviter en musiker fra listen nedenfor.',
   select: 'Vælg musiker',
   confirmTitle: 'Vil du vælge denne musiker?',
   confirmText:
@@ -409,7 +452,7 @@ export const da: Dictionary = {
   confirm: 'Bekræft valg',
   cancel: 'Annuller',
   selectedText: 'Kontakt den valgte musiker for at bekræfte aftalen.',
-  publicPage: 'Se offentligt opslag',
+  publicPage: 'Se opslag',
   signOut: 'Log ud',
   footer: 'God musik starter med mennesker.',
   footerNote: 'Til orkestre, bigbands og ensembler.',
@@ -425,7 +468,7 @@ export const da: Dictionary = {
   pastError: 'Vælg en fremtidig dato og gyldige tidspunkter. Koncerttid må ikke være før mødetid.',
   configuration: 'Tjenesten er ikke konfigureret endnu. Prøv igen senere.',
   notFound: 'Opslaget blev ikke fundet.',
-  returnHome: 'Tilbage til åbne opslag',
+  returnHome: 'Tilbage til forsiden',
   working: 'Arbejder…',
   privacy:
     'Kun ensemblets medlemmer kan se dit svar. Dine kontaktoplysninger bruges til at aftale denne opgave.',

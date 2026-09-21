@@ -14,6 +14,8 @@ async function organizer() {
   if (auth.error) throw auth.error;
   return { db, id: auth.data.user!.id };
 }
+const owners = new Map<string, typeof anon>();
+const tokens = new Map<string, string>();
 async function publish(db: typeof anon) {
   const id = crypto.randomUUID();
   const workspace = await db.rpc('save_ensemble', {
@@ -43,6 +45,7 @@ async function publish(db: typeof anon) {
     files: [],
   });
   if (error) throw error;
+  owners.set(data as string, db);
   return data as string;
 }
 async function respond(
@@ -50,9 +53,31 @@ async function respond(
   email = `test-${crypto.randomUUID()}@example.com`,
   ip = crypto.randomUUID(),
 ) {
+  const tokenKey = `${call}:${email.toLowerCase()}`;
+  let token = tokens.get(tokenKey);
+  if (!token) {
+    const db = owners.get(call)!;
+    const c = (await db.from('calls').select('*').eq('id', call).single()).data!;
+    const sub = await db.rpc('save_substitute', {
+      ensemble: c.ensemble_id,
+      payload: {
+        id: crypto.randomUUID(),
+        name: 'Private musician',
+        instrument: c.instrument,
+        phone: '+4598765432',
+        email,
+      },
+    });
+    if (sub.error) throw sub.error;
+    const invitation = await db.rpc('invite_substitute', { call_id: call, substitute: sub.data });
+    if (invitation.error) throw invitation.error;
+    token = invitation.data;
+    tokens.set(tokenKey, token!);
+  }
   return admin.rpc('submit_response', {
     payload: {
       call_id: call,
+      invite_token: token,
       name: 'Private musician',
       email,
       phone: '+4598765432',
@@ -68,9 +93,9 @@ test('database ownership, anonymous access, duplicates and atomic selection', as
   const call = await publish(owner.db);
   const foreignCall = await publish(stranger.db);
   const publicData = await anon.from('calls').select('*').eq('id', call).single();
-  expect(publicData.error).toBeNull();
-  expect(publicData.data).not.toHaveProperty('organizer_email');
-  expect(publicData.data).not.toHaveProperty('organizer_phone');
+  expect(publicData.error).not.toBeNull();
+  expect(publicData.data).toBeNull();
+  expect((await stranger.db.from('calls').select('*').eq('id', call)).data).toEqual([]);
   expect((await anon.from('responses').select('*')).error).not.toBeNull();
   expect((await anon.from('call_contacts').select('*')).error).not.toBeNull();
   const email = `duplicate-${crypto.randomUUID()}@example.com`;
@@ -126,7 +151,7 @@ test('database ownership, anonymous access, duplicates and atomic selection', as
   expect(
     (await owner.db.from('responses').select('id').eq('call_id', call).eq('selected', true)).data,
   ).toHaveLength(1);
-  expect((await respond(call)).error?.message).toContain('closed');
+  expect((await respond(call, email)).error?.message).toContain('closed');
 });
 
 test('expired calls reject responses and selection; anonymous rate limit is shared across calls', async () => {
@@ -143,7 +168,7 @@ test('expired calls reject responses and selection; anonymous rate limit is shar
     .update({ call_at: new Date(Date.now() - 86400000).toISOString() })
     .eq('id', call);
   expect(updated.error).toBeNull();
-  expect((await respond(call)).error?.message).toContain('closed');
+  expect((await respond(call, `rate-0-${ip}@example.com`, ip)).error?.message).toContain('closed');
   const response = (
     await owner.db.from('responses').select('id').eq('call_id', call).limit(1).single()
   ).data!;
@@ -151,4 +176,112 @@ test('expired calls reject responses and selection; anonymous rate limit is shar
     (await owner.db.rpc('select_musician', { call_id: call, response_id: response.id })).error
       ?.message,
   ).toContain('closed');
+});
+
+test('private directory and invitations enforce membership, instrument, identity and revocation', async ({
+  request,
+}) => {
+  const owner = await organizer();
+  const outsider = await organizer();
+  const call = await publish(owner.db);
+  const otherCall = await publish(owner.db);
+  const c = (await owner.db.from('calls').select('*').eq('id', call).single()).data!;
+  const payload = {
+    id: crypto.randomUUID(),
+    name: 'Listed musician',
+    instrument: 'trombone',
+    phone: '+4512345678',
+    email: 'listed@example.com',
+  };
+  expect(
+    (await outsider.db.rpc('save_substitute', { ensemble: c.ensemble_id, payload })).error?.message,
+  ).toContain('unauthorized');
+  expect(
+    (await owner.db.rpc('save_substitute', { ensemble: c.ensemble_id, payload })).error,
+  ).toBeNull();
+  expect((await anon.from('ensemble_substitutes').select('*')).error).not.toBeNull();
+  expect(
+    (await outsider.db.from('ensemble_substitutes').select('*').eq('id', payload.id)).data,
+  ).toEqual([]);
+  expect(
+    (await outsider.db.rpc('invite_substitute', { call_id: call, substitute: payload.id })).error
+      ?.message,
+  ).toContain('unauthorized');
+  expect(
+    (await owner.db.rpc('invite_substitute', { call_id: otherCall, substitute: payload.id })).error
+      ?.message,
+  ).toContain('invalid_substitute');
+  const wrong = { ...payload, id: crypto.randomUUID(), instrument: 'violin' };
+  await owner.db.rpc('save_substitute', { ensemble: c.ensemble_id, payload: wrong });
+  expect(
+    (await owner.db.rpc('invite_substitute', { call_id: call, substitute: wrong.id })).error
+      ?.message,
+  ).toContain('invalid_substitute');
+  const invite = async () => {
+    const r = await owner.db.rpc('invite_substitute', { call_id: call, substitute: payload.id });
+    expect(r.error).toBeNull();
+    return r.data as string;
+  };
+  const submit = (token?: string, callId = call) =>
+    admin.rpc('submit_response', {
+      payload: {
+        call_id: callId,
+        invite_token: token,
+        name: 'Forged identity',
+        phone: '+4500000000',
+        email: 'forged@example.com',
+        availability: 'available',
+      },
+      ip_hash: crypto.randomUUID(),
+    });
+  expect((await submit()).error?.message).toContain('invalid_invitation');
+  const oldToken = await invite();
+  const token = await invite();
+  expect((await submit(oldToken)).error?.message).toContain('invalid_invitation');
+  expect((await submit(token, otherCall)).error?.message).toContain('invalid_invitation');
+  expect((await request.get(`/en/calls/${call}`)).status()).toBe(404);
+  expect((await request.get(`/en/calls/${call}?invite=${token}`)).status()).toBe(200);
+  expect((await submit(token)).error).toBeNull();
+  const response = (await owner.db.from('responses').select('*').eq('call_id', call).single())
+    .data!;
+  expect(response.name).toBe(payload.name);
+  expect(response.email).toBe(payload.email);
+  expect(response.phone).toBe(payload.phone);
+  expect((await submit(token)).error?.code).toBe('23505');
+  expect(
+    (
+      await owner.db.rpc('save_substitute', {
+        ensemble: c.ensemble_id,
+        payload: { ...payload, phone: '+4599999999' },
+      })
+    ).error,
+  ).toBeNull();
+  expect((await submit(token)).error?.message).toContain('invalid_invitation');
+  expect((await request.get(`/en/calls/${call}?invite=${token}`)).status()).toBe(404);
+  const expired = await invite();
+  await admin
+    .from('call_invitations')
+    .update({ expires_at: new Date(Date.now() - 1000).toISOString() })
+    .eq('call_id', call)
+    .eq('substitute_id', payload.id);
+  expect((await submit(expired)).error?.message).toContain('invalid_invitation');
+  expect((await request.get(`/en/calls/${call}?invite=${expired}`)).status()).toBe(404);
+  const replacement = await invite();
+  expect(
+    (
+      await outsider.db.rpc('remove_substitute', {
+        ensemble: c.ensemble_id,
+        substitute: payload.id,
+      })
+    ).error?.message,
+  ).toContain('unauthorized');
+  expect(
+    (await owner.db.rpc('remove_substitute', { ensemble: c.ensemble_id, substitute: payload.id }))
+      .error,
+  ).toBeNull();
+  expect((await request.get(`/en/calls/${call}?invite=${replacement}`)).status()).toBe(404);
+  expect(
+    (await owner.db.rpc('select_musician', { call_id: call, response_id: response.id })).error
+      ?.message,
+  ).toContain('invalid_response');
 });
